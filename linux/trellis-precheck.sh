@@ -37,10 +37,10 @@
 # Script Name: Trellis-Prereq
 # Created: 2013/05/01
 # Modified: 2018/09/17
-# Author: Richard Golstein [NETPWR/AVOCENT/UK], Scott Donaldson [NETPWR/AVOCENT/UK]
+# Author: Richard Golstein [NETPWR/AVOCENT/UK], Scott Donaldson [NETPWR/AVOCENT/UK]. Ray Daugherty (NETPWR/AVOCENT/US)
 # Company: Vertiv Infrastructure Ltd.
 # Group: Software Delovery, Services
-# Email: scott.donaldson@vertivco.com
+# Email: scott.donaldson@vertivco.com. ray.daugherty@vertivco.com
 #---------------------------------------------------------------------------------------------
 
 #
@@ -54,7 +54,8 @@ ENV_ORIGIN_FOLDER=`pwd`
 DD_PARAM_FLUSHED="bs=8k count=100k conv=fdatasync"
 DD_PARAM_CACHED="bs=8k count=100k"
 DD_OUTFILE="/tmp/output.img"
-SCRIPT_VERSION="3.2.2"
+# (30 Sep 2018 - (RayD) Bump to next minor version (3.3.0)
+SCRIPT_VERSION="3.3.0"
 
 CFG_OUTPUT_FOLDER="~${ENV_REAL_USER}"
 CFG_OUTPUT_TMP_FOLDER="/tmp"
@@ -154,7 +155,8 @@ if [ "$TRELLIS_NEW_INSTALL" == "false" ]; then
     else
       TRELLIS_NEW_INSTALL="Yes"
 	  echo "Performing pre-check for new installation..."	  
-	  echo "WARNING: The cleanup script may need to be run"
+# (30 Sep 2018 - (RayD) Update comment when indicating this a new install when traces of Trellis are found
+	  echo "WARNING: Powertools should be run if this is new install on a server where Trellis already exists"
     fi	
 else
     echo "Performing pre-check for new installation..."	
@@ -308,7 +310,7 @@ else
     echo ""
     echo -n "What is the IP address for the back server? "
     read TRELLIS_BACK_IP
-    echo""
+    echo ""
     echo "INFO: The ip address entered was $TRELLIS_BACK_IP, will try to verify that the ip is active"
     ping -c 1 $TRELLIS_BACK_IP
     if [ $? -eq "0" ]; then
@@ -513,7 +515,7 @@ echo 'Date Time:               '    $CUR_DATE > `tty`
 echo 'Time Zone:               '    $CUR_TIMEZONE > `tty`
 echo 'Time Server:             '    "$CUR_TIMESERVER" > `tty`
 echo
-echo $'**********************************************************************\n'  > `tty`
+echo -e $'**********************************************************************\n'  > `tty`
 #####
 
 #
@@ -525,15 +527,15 @@ exec > ${CFG_LOGFILE_PATH} 2>&1
 
 echo -e "${BOLD}Performing Verification Checks${NONE}" > `tty`
 echo > `tty`
-echo ########################################################################################\n  Trellis Linux OS Report (Version: '$SCRIPT_VERSION')\n########################################################################################'
+echo -e '########################################################################################\n  Trellis Linux OS Report (Version: '$SCRIPT_VERSION')\n########################################################################################'
 echo 
 if [ $TRELLIS_NEW_INSTALL = "Yes" ]; then
-    echo ="[INFO]\tChecks performed for new installation"
+    echo -e "[INFO]\tChecks performed for new installation"
 else
-    echo "[INFO]\tChecks performed for patch installation"
+    echo -e "[INFO]\tChecks performed for patch installation"
 fi
 echo
-echo '########################################################################################\n  Installation Configuration Details\n########################################################################################'
+echo -e '########################################################################################\n  Installation Configuration Details\n########################################################################################'
 if [ $TRELLIS_NEW_INSTALL = "No" ]; then
     echo 
     echo "Current Trellis Version:  "$TRELLIS_INSTALLED_VERSION
@@ -566,134 +568,143 @@ echo ' - /u05 = 30GB'
 echo ' - / = 10GB'
 echo
 df -h
-echo '########################################################################################\n'
+echo -e '########################################################################################\n'
 
 ###############################################################################
 #       REQ 1.* OPERATING SYSTEM CHECKS
 ###############################################################################
-echo '########################################################################################\n\tLinux Checks\n########################################################################################'
+echo -e '########################################################################################\n\tLinux Checks\n########################################################################################'
 
-#
-#  REQ 1.1 - Operating System is the correct version
-#
-echo '########################################################################################\n\t[REQ 1.1] Operating System Support\n########################################################################################'
-echo -n "[REQ 1.1]   Checking OS release..." > `tty`
-echo "[REQ 1.1]   Checking OS release..."
-cat /etc/redhat-release
-uname -m
-echo
+# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck, but keep the setting of the RELEASE variable
+##
+##  REQ 1.1 - Operating System is the correct version
+##
+#echo -e '########################################################################################\n\t[REQ 1.1] Operating System Support\n########################################################################################'
+#echo -n "[REQ 1.1]   Checking OS release..." > `tty`
+#echo "[REQ 1.1]   Checking OS release..."
+#cat /etc/redhat-release
+#uname -m
+#echo
 RELEASE=`cat /etc/redhat-release | awk '{print $7}'`
-
-if [ "$RELEASE" == 6.4 -o "$RELEASE" == 6.5 -o "$RELEASE" == 6.6 ]; then
-    echo "    ==>RH Release is $RELEASE. OK."
-    echo -e "\t\t\t\t${GREEN}Passed${NONE}" > `tty`
-elif [ "$RELEASE" == 6.7 -o "$RELEASE" == 6.8 ]; then
-    echo "    ==>RH Release is $RELEASE. OK (Approval Needed)"
-    echo -e "\t\t\t\t${GREEN}Passed [Limited]${NONE}" > `tty`	
-else
-    echo "    ==>Automatic check failed!"
-    echo -e "\t\t\t\t${RED}Failed${NONE}" > `tty`
-	echo "    WARNING: OS Release is NOT supported, this script may not be 100% reliable" > `tty`
-fi
+#
+#if [ "$RELEASE" == 6.4 -o "$RELEASE" == 6.5 -o "$RELEASE" == 6.6 ]; then
+#    echo "    ==>RH Release is $RELEASE. OK."
+#    echo -e "\t\t\t\t${GREEN}Passed${NONE}" > `tty`
+#elif [ "$RELEASE" == 6.7 -o "$RELEASE" == 6.8 ]; then
+#    echo "    ==>RH Release is $RELEASE. OK (Approval Needed)"
+#    echo -e "\t\t\t\t${GREEN}Passed [Limited]${NONE}" > `tty`	
+#else
+#    echo "    ==>Automatic check failed!"
+#    echo -e "\t\t\t\t${RED}Failed${NONE}" > `tty`
+#	echo "    WARNING: OS Release is NOT supported, this script may not be 100% reliable" > `tty`
+#fi
 #####
 
 #
 # Operating System Specifical Variables
 #
-if [ $RELEASE = "5.9" ]; then
+if [ "$RELEASE" == "5.9" ]; then
   IPTABLES_RESULT="Firewall is stopped."
+  IP6TABLES_RESULT=""
   REQ_1_59_PACKAGES="kexec-tools fipscheck device-mapper-multipath sgpio emacs libsane-hpaio xorg-x11-utils xorg-x11-server-Xnest binutils compat-db compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel gcc gcc-c++ glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel make openmotif screen sysstat unixODBC unixODBC-devel glibc-devel.i386 java-1.6.0-openjdk"
   ENTROPY="rngd -r /dev/urandom -t 2"
   ENTROPY_EXTRAOPTIONS="-r /dev/urandom -b"
   TIMEZONE_LIST="Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmara Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Africa/Brazzaville Africa/Bujumbura Africa/Cairo Africa/Casablanca Africa/Ceuta Africa/Conakry Africa/Dakar Africa/Dar_es_Salaam Africa/Djibouti Africa/Douala Africa/El_Aaiun Africa/Freetown Africa/Gaborone Africa/Harare Africa/Johannesburg Africa/Kampala Africa/Khartoum Africa/Kigali Africa/Kinshasa Africa/Lagos Africa/Libreville Africa/Lome Africa/Luanda Africa/Lubumbashi Africa/Lusaka Africa/Malabo Africa/Maputo Africa/Maseru Africa/Mbabane Africa/Mogadishu Africa/Monrovia Africa/Nairobi Africa/Ndjamena Africa/Niamey Africa/Nouakchott Africa/Ouagadougou Africa/Porto-Novo Africa/Sao_Tome Africa/Timbuktu Africa/Tripoli Africa/Tunis Africa/Windhoek America/Adak America/Anchorage America/Anguilla America/Antigua America/Araguaina America/Argentina/Buenos_Aires America/Argentina/Catamarca America/Argentina/ComodRivadavia America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/La_Rioja America/Argentina/Mendoza America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Aruba America/Asuncion America/Atikokan America/Atka America/Bahia America/Barbados America/Belem America/Belize America/Blanc-Sablon America/Boa_Vista America/Bogota America/Boise America/Buenos_Aires America/Cambridge_Bay America/Campo_Grande America/Cancun America/Caracas America/Catamarca America/Cayenne America/Cayman America/Chicago America/Chihuahua America/Coral_Harbour America/Cordoba America/Costa_Rica America/Cuiaba America/Curacao America/Danmarkshavn America/Dawson America/Dawson_Creek America/Denver America/Detroit America/Dominica America/Edmonton America/Eirunepe America/El_Salvador America/Ensenada America/Fort_Wayne America/Fortaleza America/Glace_Bay America/Godthab America/Goose_Bay America/Grand_Turk America/Grenada America/Guadeloupe America/Guatemala America/Guayaquil America/Guyana America/Halifax America/Havana America/Hermosillo America/Indiana/Indianapolis America/Indiana/Knox America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Tell_City America/Indiana/Vevay America/Indiana/Vincennes America/Indiana/Winamac America/Indianapolis America/Inuvik America/Iqaluit America/Jamaica America/Jujuy America/Juneau America/Kentucky/Louisville America/Kentucky/Monticello America/Knox_IN America/La_Paz America/Lima America/Los_Angeles America/Louisville America/Maceio America/Managua America/Manaus America/Marigot America/Martinique America/Mazatlan America/Mendoza America/Menominee America/Merida America/Mexico_City America/Miquelon America/Moncton America/Monterrey America/Montevideo America/Montreal America/Montserrat America/Nassau America/New_York America/Nipigon America/Nome America/Noronha America/North_Dakota/Center America/North_Dakota/New_Salem America/Panama America/Pangnirtung America/Paramaribo America/Phoenix America/Port_of_Spain America/Port-au-Prince America/Porto_Acre America/Porto_Velho America/Puerto_Rico America/Rainy_River America/Rankin_Inlet America/Recife America/Regina America/Resolute America/Rio_Branco America/Rosario America/Santiago America/Santo_Domingo America/Sao_Paulo America/Scoresbysund America/Shiprock America/St_Barthelemy America/St_Johns America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Swift_Current America/Tegucigalpa America/Thule America/Thunder_Bay America/Tijuana America/Toronto America/Tortola America/Vancouver America/Virgin America/Whitehorse America/Winnipeg America/Yakutat America/Yellowknife Antarctica/Casey Antarctica/Davis Antarctica/DumontDUrville Antarctica/Mawson Antarctica/McMurdo Antarctica/Palmer Antarctica/South_Pole Antarctica/Syowa Arctic/Longyearbyen Asia/Aden Asia/Almaty Asia/Amman Asia/Anadyr Asia/Aqtau Asia/Aqtobe Asia/Ashgabat Asia/Ashkhabad Asia/Baghdad Asia/Bahrain Asia/Baku Asia/Bangkok Asia/Beirut Asia/Bishkek Asia/Brunei Asia/Calcutta Asia/Choibalsan Asia/Chongqing Asia/Chungking Asia/Colombo Asia/Dacca Asia/Damascus Asia/Dhaka Asia/Dili Asia/Dubai Asia/Dushanbe Asia/Gaza Asia/Harbin Asia/Ho_Chi_Minh Asia/Hong_Kong Asia/Hovd Asia/Irkutsk Asia/Istanbul Asia/Jakarta Asia/Jayapura Asia/Jerusalem Asia/Kabul Asia/Kamchatka Asia/Karachi Asia/Kashgar Asia/Kathmandu Asia/Katmandu Asia/Kolkata Asia/Krasnoyarsk Asia/Kuala_Lumpur Asia/Kuching Asia/Kuwait Asia/Macao Asia/Macau Asia/Magadan Asia/Makassar Asia/Manila Asia/Muscat Asia/Nicosia Asia/Novosibirsk Asia/Omsk Asia/Oral Asia/Phnom_Penh Asia/Pontianak Asia/Pyongyang Asia/Qatar Asia/Qyzylorda Asia/Rangoon Asia/Riyadh Asia/Saigon Asia/Sakhalin Asia/Samarkand Asia/Seoul Asia/Shanghai Asia/Singapore Asia/Taipei Asia/Tashkent Asia/Tbilisi Asia/Tehran Asia/Tel_Aviv Asia/Thimbu Asia/Thimphu Asia/Tokyo Asia/Ujung_Pandang Asia/Ulaanbaatar Asia/Ulan_Bator Asia/Urumqi Asia/Vientiane Asia/Vladivostok Asia/Yakutsk Asia/Yekaterinburg Asia/Yerevan Atlantic/Azores Atlantic/Bermuda Atlantic/Canary Atlantic/Cape_Verde Atlantic/Faeroe Atlantic/Faroe Atlantic/Jan_Mayen Atlantic/Madeira Atlantic/Reykjavik Atlantic/South_Georgia Atlantic/St_Helena Atlantic/Stanley Australia/ACT Australia/Adelaide Australia/Brisbane Australia/Broken_Hill Australia/Canberra Australia/Currie Australia/Darwin Australia/Eucla Australia/Hobart Australia/LHI Australia/Lindeman Australia/Lord_Howe Australia/Melbourne Australia/North Australia/NSW Australia/Perth Australia/Queensland Australia/South Australia/Sydney Australia/Tasmania Australia/Victoria Australia/West Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West Canada/Atlantic Canada/Central Canada/Eastern Canada/East-Saskatchewan Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Saskatchewan Canada/Yukon CET Chile/Continental Chile/EasterIsland CST CST6CDT Cuba EET Egypt Eire EST EST5EDT Etc/GMT Etc/GMT+0 Etc/GMT+1 Etc/GMT+10 Etc/GMT+11 Etc/GMT+12 Etc/GMT+2 Etc/GMT+3 Etc/GMT+4 Etc/GMT+5 Etc/GMT+6 Etc/GMT+7 Etc/GMT+8 Etc/GMT+9 Etc/GMT0 Etc/GMT-0 Etc/GMT-1 Etc/GMT-10 Etc/GMT-11 Etc/GMT-12 Etc/GMT-13 Etc/GMT-14 Etc/GMT-2 Etc/GMT-3 Etc/GMT-4 Etc/GMT-5 Etc/GMT-6 Etc/GMT-7 Etc/GMT-8 Etc/GMT-9 Etc/Greenwich Europe/Amsterdam Europe/Andorra Europe/Athens Europe/Belfast Europe/Belgrade Europe/Berlin Europe/Bratislava Europe/Brussels Europe/Bucharest Europe/Budapest Europe/Chisinau Europe/Copenhagen Europe/Dublin Europe/Gibraltar Europe/Guernsey Europe/Helsinki Europe/Isle_of_Man Europe/Istanbul Europe/Jersey Europe/Kaliningrad Europe/Kiev Europe/Lisbon Europe/Ljubljana Europe/London Europe/Luxembourg Europe/Madrid Europe/Malta Europe/Mariehamn Europe/Minsk Europe/Monaco Europe/Moscow Europe/Nicosia Europe/Oslo Europe/Paris Europe/Prague Europe/Riga Europe/Rome Europe/Samara Europe/San_Marino Europe/Sarajevo Europe/Simferopol Europe/Skopje Europe/Sofia Europe/Stockholm Europe/Tallinn Europe/Tirane Europe/Tiraspol Europe/Uzhgorod Europe/Vaduz Europe/Vatican Europe/Vienna Europe/Vilnius Europe/Volgograd Europe/Warsaw Europe/Zagreb Europe/Zaporozhye Europe/Zurich GB GB-Eire GMT GMT+0 GMT0 GMT-0 Greenwich Hongkong HST Iceland Indian/Antananarivo Indian/Chagos Indian/Christmas Indian/Cocos Indian/Comoro Indian/Kerguelen Indian/Mahe Indian/Maldives Indian/Mauritius Indian/Mayotte Indian/Reunion Iran Israel Jamaica Japan Kwajalein Libya MET Mexico/BajaNorte Mexico/BajaSur Mexico/General MST MST7MDT Navajo NZ NZ-CHAT Pacific/Apia Pacific/Auckland Pacific/Chatham Pacific/Easter Pacific/Efate Pacific/Enderbury Pacific/Fakaofo Pacific/Fiji Pacific/Funafuti Pacific/Galapagos Pacific/Gambier Pacific/Guadalcanal Pacific/Guam Pacific/Honolulu Pacific/Johnston Pacific/Kiritimati Pacific/Kosrae Pacific/Kwajalein Pacific/Majuro Pacific/Marquesas Pacific/Midway Pacific/Nauru Pacific/Niue Pacific/Norfolk Pacific/Noumea Pacific/Pago_Pago Pacific/Palau Pacific/Pitcairn Pacific/Ponape Pacific/Port_Moresby Pacific/Rarotonga Pacific/Saipan Pacific/Samoa Pacific/Tahiti Pacific/Tarawa Pacific/Tongatapu Pacific/Truk Pacific/Wake Pacific/Wallis Pacific/Yap Poland Portugal PRC PST PST8PDT ROC ROK Singapore Turkey US/Alaska US/Aleutian US/Arizona US/Central US/Eastern US/East-Indiana US/Hawaii US/Indiana-Starke US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa UTC WET W-SU"
-elif [ $RELEASE = "6.3" ]; then
+elif [ "$RELEASE" == "6.3" ]; then
   IPTABLES_RESULT="iptables: Firewall is not running."
+  IP6TABLES_RESULT=""
   REQ_1_59_PACKAGES="binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl.i686 redhat-lsb redhat-lsb.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk"
   ENTROPY="rngd -r /dev/urandom -o /dev/random -t 0.01"
   ENTROPY_EXTRAOPTIONS="-i -r /dev/urandom -o /dev/random -b"
   TIMEZONE_LIST="Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmara Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Africa/Brazzaville Africa/Bujumbura Africa/Cairo Africa/Casablanca Africa/Ceuta Africa/Conakry Africa/Dakar Africa/Dar_es_Salaam Africa/Djibouti Africa/Douala Africa/El_Aaiun Africa/Freetown Africa/Gaborone Africa/Harare Africa/Johannesburg Africa/Kampala Africa/Khartoum Africa/Kigali Africa/Kinshasa Africa/Lagos Africa/Libreville Africa/Lome Africa/Luanda Africa/Lubumbashi Africa/Lusaka Africa/Malabo Africa/Maputo Africa/Maseru Africa/Mbabane Africa/Mogadishu Africa/Monrovia Africa/Nairobi Africa/Ndjamena Africa/Niamey Africa/Nouakchott Africa/Ouagadougou Africa/Porto-Novo Africa/Sao_Tome Africa/Timbuktu Africa/Tripoli Africa/Tunis Africa/Windhoek America/Adak America/Anchorage America/Anguilla America/Antigua America/Araguaina America/Argentina/Buenos_Aires America/Argentina/Catamarca America/Argentina/ComodRivadavia America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/La_Rioja America/Argentina/Mendoza America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Aruba America/Asuncion America/Atikokan America/Atka America/Bahia America/Barbados America/Belem America/Belize America/Blanc-Sablon America/Boa_Vista America/Bogota America/Boise America/Buenos_Aires America/Cambridge_Bay America/Campo_Grande America/Cancun America/Caracas America/Catamarca America/Cayenne America/Cayman America/Chicago America/Chihuahua America/Coral_Harbour America/Cordoba America/Costa_Rica America/Cuiaba America/Curacao America/Danmarkshavn America/Dawson America/Dawson_Creek America/Denver America/Detroit America/Dominica America/Edmonton America/Eirunepe America/El_Salvador America/Ensenada America/Fort_Wayne America/Fortaleza America/Glace_Bay America/Godthab America/Goose_Bay America/Grand_Turk America/Grenada America/Guadeloupe America/Guatemala America/Guayaquil America/Guyana America/Halifax America/Havana America/Hermosillo America/Indiana/Indianapolis America/Indiana/Knox America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Tell_City America/Indiana/Vevay America/Indiana/Vincennes America/Indiana/Winamac America/Indianapolis America/Inuvik America/Iqaluit America/Jamaica America/Jujuy America/Juneau America/Kentucky/Louisville America/Kentucky/Monticello America/Knox_IN America/La_Paz America/Lima America/Los_Angeles America/Louisville America/Maceio America/Managua America/Manaus America/Marigot America/Martinique America/Mazatlan America/Mendoza America/Menominee America/Merida America/Mexico_City America/Miquelon America/Moncton America/Monterrey America/Montevideo America/Montreal America/Montserrat America/Nassau America/New_York America/Nipigon America/Nome America/Noronha America/North_Dakota/Center America/North_Dakota/New_Salem America/Panama America/Pangnirtung America/Paramaribo America/Phoenix America/Port_of_Spain America/Port-au-Prince America/Porto_Acre America/Porto_Velho America/Puerto_Rico America/Rainy_River America/Rankin_Inlet America/Recife America/Regina America/Resolute America/Rio_Branco America/Rosario America/Santiago America/Santo_Domingo America/Sao_Paulo America/Scoresbysund America/Shiprock America/St_Barthelemy America/St_Johns America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Swift_Current America/Tegucigalpa America/Thule America/Thunder_Bay America/Tijuana America/Toronto America/Tortola America/Vancouver America/Virgin America/Whitehorse America/Winnipeg America/Yakutat America/Yellowknife Antarctica/Casey Antarctica/Davis Antarctica/DumontDUrville Antarctica/Mawson Antarctica/McMurdo Antarctica/Palmer Antarctica/South_Pole Antarctica/Syowa Arctic/Longyearbyen Asia/Aden Asia/Almaty Asia/Amman Asia/Anadyr Asia/Aqtau Asia/Aqtobe Asia/Ashgabat Asia/Ashkhabad Asia/Baghdad Asia/Bahrain Asia/Baku Asia/Bangkok Asia/Beirut Asia/Bishkek Asia/Brunei Asia/Calcutta Asia/Choibalsan Asia/Chongqing Asia/Chungking Asia/Colombo Asia/Dacca Asia/Damascus Asia/Dhaka Asia/Dili Asia/Dubai Asia/Dushanbe Asia/Gaza Asia/Harbin Asia/Ho_Chi_Minh Asia/Hong_Kong Asia/Hovd Asia/Irkutsk Asia/Istanbul Asia/Jakarta Asia/Jayapura Asia/Jerusalem Asia/Kabul Asia/Kamchatka Asia/Karachi Asia/Kashgar Asia/Kathmandu Asia/Katmandu Asia/Kolkata Asia/Krasnoyarsk Asia/Kuala_Lumpur Asia/Kuching Asia/Kuwait Asia/Macao Asia/Macau Asia/Magadan Asia/Makassar Asia/Manila Asia/Muscat Asia/Nicosia Asia/Novosibirsk Asia/Omsk Asia/Oral Asia/Phnom_Penh Asia/Pontianak Asia/Pyongyang Asia/Qatar Asia/Qyzylorda Asia/Rangoon Asia/Riyadh Asia/Saigon Asia/Sakhalin Asia/Samarkand Asia/Seoul Asia/Shanghai Asia/Singapore Asia/Taipei Asia/Tashkent Asia/Tbilisi Asia/Tehran Asia/Tel_Aviv Asia/Thimbu Asia/Thimphu Asia/Tokyo Asia/Ujung_Pandang Asia/Ulaanbaatar Asia/Ulan_Bator Asia/Urumqi Asia/Vientiane Asia/Vladivostok Asia/Yakutsk Asia/Yekaterinburg Asia/Yerevan Atlantic/Azores Atlantic/Bermuda Atlantic/Canary Atlantic/Cape_Verde Atlantic/Faeroe Atlantic/Faroe Atlantic/Jan_Mayen Atlantic/Madeira Atlantic/Reykjavik Atlantic/South_Georgia Atlantic/St_Helena Atlantic/Stanley Australia/ACT Australia/Adelaide Australia/Brisbane Australia/Broken_Hill Australia/Canberra Australia/Currie Australia/Darwin Australia/Eucla Australia/Hobart Australia/LHI Australia/Lindeman Australia/Lord_Howe Australia/Melbourne Australia/North Australia/NSW Australia/Perth Australia/Queensland Australia/South Australia/Sydney Australia/Tasmania Australia/Victoria Australia/West Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West Canada/Atlantic Canada/Central Canada/Eastern Canada/East-Saskatchewan Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Saskatchewan Canada/Yukon CET Chile/Continental Chile/EasterIsland CST CST6CDT Cuba EET Egypt Eire EST EST5EDT Etc/GMT Etc/GMT+0 Etc/GMT+1 Etc/GMT+10 Etc/GMT+11 Etc/GMT+12 Etc/GMT+2 Etc/GMT+3 Etc/GMT+4 Etc/GMT+5 Etc/GMT+6 Etc/GMT+7 Etc/GMT+8 Etc/GMT+9 Etc/GMT0 Etc/GMT-0 Etc/GMT-1 Etc/GMT-10 Etc/GMT-11 Etc/GMT-12 Etc/GMT-13 Etc/GMT-14 Etc/GMT-2 Etc/GMT-3 Etc/GMT-4 Etc/GMT-5 Etc/GMT-6 Etc/GMT-7 Etc/GMT-8 Etc/GMT-9 Etc/Greenwich Europe/Amsterdam Europe/Andorra Europe/Athens Europe/Belfast Europe/Belgrade Europe/Berlin Europe/Bratislava Europe/Brussels Europe/Bucharest Europe/Budapest Europe/Chisinau Europe/Copenhagen Europe/Dublin Europe/Gibraltar Europe/Guernsey Europe/Helsinki Europe/Isle_of_Man Europe/Istanbul Europe/Jersey Europe/Kaliningrad Europe/Kiev Europe/Lisbon Europe/Ljubljana Europe/London Europe/Luxembourg Europe/Madrid Europe/Malta Europe/Mariehamn Europe/Minsk Europe/Monaco Europe/Moscow Europe/Nicosia Europe/Oslo Europe/Paris Europe/Prague Europe/Riga Europe/Rome Europe/Samara Europe/San_Marino Europe/Sarajevo Europe/Simferopol Europe/Skopje Europe/Sofia Europe/Stockholm Europe/Tallinn Europe/Tirane Europe/Tiraspol Europe/Uzhgorod Europe/Vaduz Europe/Vatican Europe/Vienna Europe/Vilnius Europe/Volgograd Europe/Warsaw Europe/Zagreb Europe/Zaporozhye Europe/Zurich GB GB-Eire GMT GMT+0 GMT0 GMT-0 Greenwich Hongkong HST Iceland Indian/Antananarivo Indian/Chagos Indian/Christmas Indian/Cocos Indian/Comoro Indian/Kerguelen Indian/Mahe Indian/Maldives Indian/Mauritius Indian/Mayotte Indian/Reunion Iran Israel Jamaica Japan Kwajalein Libya MET Mexico/BajaNorte Mexico/BajaSur Mexico/General MST MST7MDT Navajo NZ NZ-CHAT Pacific/Apia Pacific/Auckland Pacific/Chatham Pacific/Easter Pacific/Efate Pacific/Enderbury Pacific/Fakaofo Pacific/Fiji Pacific/Funafuti Pacific/Galapagos Pacific/Gambier Pacific/Guadalcanal Pacific/Guam Pacific/Honolulu Pacific/Johnston Pacific/Kiritimati Pacific/Kosrae Pacific/Kwajalein Pacific/Majuro Pacific/Marquesas Pacific/Midway Pacific/Nauru Pacific/Niue Pacific/Norfolk Pacific/Noumea Pacific/Pago_Pago Pacific/Palau Pacific/Pitcairn Pacific/Ponape Pacific/Port_Moresby Pacific/Rarotonga Pacific/Saipan Pacific/Samoa Pacific/Tahiti Pacific/Tarawa Pacific/Tongatapu Pacific/Truk Pacific/Wake Pacific/Wallis Pacific/Yap Poland Portugal PRC PST PST8PDT ROC ROK Singapore Turkey US/Alaska US/Aleutian US/Arizona US/Central US/Eastern US/East-Indiana US/Hawaii US/Indiana-Starke US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa UTC WET W-SU"
-elif [ $RELEASE = "6.4" ]; then
+elif [ "$RELEASE" == "6.4" ]; then
   IPTABLES_RESULT="iptables: Firewall is not running."
+  IP6TABLES_RESULT=""
   REQ_1_59_PACKAGES="zlib zlib.i686 binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl.i686 redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk java-1.7.0-openjdk"
   ENTROPY="rngd -r /dev/urandom -o /dev/random -t 0.01"
   ENTROPY_EXTRAOPTIONS="-i -r /dev/urandom -o /dev/random -b"  
   TIMEZONE_LIST="Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmara Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Africa/Brazzaville Africa/Bujumbura Africa/Cairo Africa/Casablanca Africa/Ceuta Africa/Conakry Africa/Dakar Africa/Dar_es_Salaam Africa/Djibouti Africa/Douala Africa/El_Aaiun Africa/Freetown Africa/Gaborone Africa/Harare Africa/Johannesburg Africa/Kampala Africa/Khartoum Africa/Kigali Africa/Kinshasa Africa/Lagos Africa/Libreville Africa/Lome Africa/Luanda Africa/Lubumbashi Africa/Lusaka Africa/Malabo Africa/Maputo Africa/Maseru Africa/Mbabane Africa/Mogadishu Africa/Monrovia Africa/Nairobi Africa/Ndjamena Africa/Niamey Africa/Nouakchott Africa/Ouagadougou Africa/Porto-Novo Africa/Sao_Tome Africa/Timbuktu Africa/Tripoli Africa/Tunis Africa/Windhoek America/Adak America/Anchorage America/Anguilla America/Antigua America/Araguaina America/Argentina/Buenos_Aires America/Argentina/Catamarca America/Argentina/ComodRivadavia America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/La_Rioja America/Argentina/Mendoza America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Aruba America/Asuncion America/Atikokan America/Atka America/Bahia America/Barbados America/Belem America/Belize America/Blanc-Sablon America/Boa_Vista America/Bogota America/Boise America/Buenos_Aires America/Cambridge_Bay America/Campo_Grande America/Cancun America/Caracas America/Catamarca America/Cayenne America/Cayman America/Chicago America/Chihuahua America/Coral_Harbour America/Cordoba America/Costa_Rica America/Cuiaba America/Curacao America/Danmarkshavn America/Dawson America/Dawson_Creek America/Denver America/Detroit America/Dominica America/Edmonton America/Eirunepe America/El_Salvador America/Ensenada America/Fort_Wayne America/Fortaleza America/Glace_Bay America/Godthab America/Goose_Bay America/Grand_Turk America/Grenada America/Guadeloupe America/Guatemala America/Guayaquil America/Guyana America/Halifax America/Havana America/Hermosillo America/Indiana/Indianapolis America/Indiana/Knox America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Tell_City America/Indiana/Vevay America/Indiana/Vincennes America/Indiana/Winamac America/Indianapolis America/Inuvik America/Iqaluit America/Jamaica America/Jujuy America/Juneau America/Kentucky/Louisville America/Kentucky/Monticello America/Knox_IN America/La_Paz America/Lima America/Los_Angeles America/Louisville America/Maceio America/Managua America/Manaus America/Marigot America/Martinique America/Mazatlan America/Mendoza America/Menominee America/Merida America/Mexico_City America/Miquelon America/Moncton America/Monterrey America/Montevideo America/Montreal America/Montserrat America/Nassau America/New_York America/Nipigon America/Nome America/Noronha America/North_Dakota/Center America/North_Dakota/New_Salem America/Panama America/Pangnirtung America/Paramaribo America/Phoenix America/Port_of_Spain America/Port-au-Prince America/Porto_Acre America/Porto_Velho America/Puerto_Rico America/Rainy_River America/Rankin_Inlet America/Recife America/Regina America/Resolute America/Rio_Branco America/Rosario America/Santiago America/Santo_Domingo America/Sao_Paulo America/Scoresbysund America/Shiprock America/St_Barthelemy America/St_Johns America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Swift_Current America/Tegucigalpa America/Thule America/Thunder_Bay America/Tijuana America/Toronto America/Tortola America/Vancouver America/Virgin America/Whitehorse America/Winnipeg America/Yakutat America/Yellowknife Antarctica/Casey Antarctica/Davis Antarctica/DumontDUrville Antarctica/Mawson Antarctica/McMurdo Antarctica/Palmer Antarctica/South_Pole Antarctica/Syowa Arctic/Longyearbyen Asia/Aden Asia/Almaty Asia/Amman Asia/Anadyr Asia/Aqtau Asia/Aqtobe Asia/Ashgabat Asia/Ashkhabad Asia/Baghdad Asia/Bahrain Asia/Baku Asia/Bangkok Asia/Beirut Asia/Bishkek Asia/Brunei Asia/Calcutta Asia/Choibalsan Asia/Chongqing Asia/Chungking Asia/Colombo Asia/Dacca Asia/Damascus Asia/Dhaka Asia/Dili Asia/Dubai Asia/Dushanbe Asia/Gaza Asia/Harbin Asia/Ho_Chi_Minh Asia/Hong_Kong Asia/Hovd Asia/Irkutsk Asia/Istanbul Asia/Jakarta Asia/Jayapura Asia/Jerusalem Asia/Kabul Asia/Kamchatka Asia/Karachi Asia/Kashgar Asia/Kathmandu Asia/Katmandu Asia/Kolkata Asia/Krasnoyarsk Asia/Kuala_Lumpur Asia/Kuching Asia/Kuwait Asia/Macao Asia/Macau Asia/Magadan Asia/Makassar Asia/Manila Asia/Muscat Asia/Nicosia Asia/Novosibirsk Asia/Omsk Asia/Oral Asia/Phnom_Penh Asia/Pontianak Asia/Pyongyang Asia/Qatar Asia/Qyzylorda Asia/Rangoon Asia/Riyadh Asia/Saigon Asia/Sakhalin Asia/Samarkand Asia/Seoul Asia/Shanghai Asia/Singapore Asia/Taipei Asia/Tashkent Asia/Tbilisi Asia/Tehran Asia/Tel_Aviv Asia/Thimbu Asia/Thimphu Asia/Tokyo Asia/Ujung_Pandang Asia/Ulaanbaatar Asia/Ulan_Bator Asia/Urumqi Asia/Vientiane Asia/Vladivostok Asia/Yakutsk Asia/Yekaterinburg Asia/Yerevan Atlantic/Azores Atlantic/Bermuda Atlantic/Canary Atlantic/Cape_Verde Atlantic/Faeroe Atlantic/Faroe Atlantic/Jan_Mayen Atlantic/Madeira Atlantic/Reykjavik Atlantic/South_Georgia Atlantic/St_Helena Atlantic/Stanley Australia/ACT Australia/Adelaide Australia/Brisbane Australia/Broken_Hill Australia/Canberra Australia/Currie Australia/Darwin Australia/Eucla Australia/Hobart Australia/LHI Australia/Lindeman Australia/Lord_Howe Australia/Melbourne Australia/North Australia/NSW Australia/Perth Australia/Queensland Australia/South Australia/Sydney Australia/Tasmania Australia/Victoria Australia/West Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West Canada/Atlantic Canada/Central Canada/Eastern Canada/East-Saskatchewan Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Saskatchewan Canada/Yukon CET Chile/Continental Chile/EasterIsland CST CST6CDT Cuba EET Egypt Eire EST EST5EDT Etc/GMT Etc/GMT+0 Etc/GMT+1 Etc/GMT+10 Etc/GMT+11 Etc/GMT+12 Etc/GMT+2 Etc/GMT+3 Etc/GMT+4 Etc/GMT+5 Etc/GMT+6 Etc/GMT+7 Etc/GMT+8 Etc/GMT+9 Etc/GMT0 Etc/GMT-0 Etc/GMT-1 Etc/GMT-10 Etc/GMT-11 Etc/GMT-12 Etc/GMT-13 Etc/GMT-14 Etc/GMT-2 Etc/GMT-3 Etc/GMT-4 Etc/GMT-5 Etc/GMT-6 Etc/GMT-7 Etc/GMT-8 Etc/GMT-9 Etc/Greenwich Europe/Amsterdam Europe/Andorra Europe/Athens Europe/Belfast Europe/Belgrade Europe/Berlin Europe/Bratislava Europe/Brussels Europe/Bucharest Europe/Budapest Europe/Chisinau Europe/Copenhagen Europe/Dublin Europe/Gibraltar Europe/Guernsey Europe/Helsinki Europe/Isle_of_Man Europe/Istanbul Europe/Jersey Europe/Kaliningrad Europe/Kiev Europe/Lisbon Europe/Ljubljana Europe/London Europe/Luxembourg Europe/Madrid Europe/Malta Europe/Mariehamn Europe/Minsk Europe/Monaco Europe/Moscow Europe/Nicosia Europe/Oslo Europe/Paris Europe/Prague Europe/Riga Europe/Rome Europe/Samara Europe/San_Marino Europe/Sarajevo Europe/Simferopol Europe/Skopje Europe/Sofia Europe/Stockholm Europe/Tallinn Europe/Tirane Europe/Tiraspol Europe/Uzhgorod Europe/Vaduz Europe/Vatican Europe/Vienna Europe/Vilnius Europe/Volgograd Europe/Warsaw Europe/Zagreb Europe/Zaporozhye Europe/Zurich GB GB-Eire GMT GMT+0 GMT0 GMT-0 Greenwich Hongkong HST Iceland Indian/Antananarivo Indian/Chagos Indian/Christmas Indian/Cocos Indian/Comoro Indian/Kerguelen Indian/Mahe Indian/Maldives Indian/Mauritius Indian/Mayotte Indian/Reunion Iran Israel Jamaica Japan Kwajalein Libya MET Mexico/BajaNorte Mexico/BajaSur Mexico/General MST MST7MDT Navajo NZ NZ-CHAT Pacific/Apia Pacific/Auckland Pacific/Chatham Pacific/Easter Pacific/Efate Pacific/Enderbury Pacific/Fakaofo Pacific/Fiji Pacific/Funafuti Pacific/Galapagos Pacific/Gambier Pacific/Guadalcanal Pacific/Guam Pacific/Honolulu Pacific/Johnston Pacific/Kiritimati Pacific/Kosrae Pacific/Kwajalein Pacific/Majuro Pacific/Marquesas Pacific/Midway Pacific/Nauru Pacific/Niue Pacific/Norfolk Pacific/Noumea Pacific/Pago_Pago Pacific/Palau Pacific/Pitcairn Pacific/Ponape Pacific/Port_Moresby Pacific/Rarotonga Pacific/Saipan Pacific/Samoa Pacific/Tahiti Pacific/Tarawa Pacific/Tongatapu Pacific/Truk Pacific/Wake Pacific/Wallis Pacific/Yap Poland Portugal PRC PST PST8PDT ROC ROK Singapore Turkey US/Alaska US/Aleutian US/Arizona US/Central US/Eastern US/East-Indiana US/Hawaii US/Indiana-Starke US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa UTC WET W-SU"  
-elif [ $RELEASE = "6.5" ] || [ $RELEASE = "6.6" ] || [ $RELEASE = "6.7" ] || [ $RELEASE = "6.8" ]; then
+elif [ "$RELEASE" == "6.5" ] || [ "$RELEASE" == "6.6" ] || [ "$RELEASE" == "6.7" ] || [ "$RELEASE" == "6.8" ] || [ "$RELEASE" == "6.9" ] ; then
   IPTABLES_RESULT="iptables: Firewall is not running."
+  IP6TABLES_RESULT=""
   REQ_1_59_PACKAGES="zlib zlib.i686 binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl openssl.i686 redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk java-1.7.0-openjdk"
   ENTROPY="rngd -r /dev/urandom -o /dev/random -t 0.01"
   ENTROPY_EXTRAOPTIONS=" -r /dev/urandom -o /dev/random -b"  
   TIMEZONE_LIST="Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmara Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Africa/Brazzaville Africa/Bujumbura Africa/Cairo Africa/Casablanca Africa/Ceuta Africa/Conakry Africa/Dakar Africa/Dar_es_Salaam Africa/Djibouti Africa/Douala Africa/El_Aaiun Africa/Freetown Africa/Gaborone Africa/Harare Africa/Johannesburg Africa/Kampala Africa/Khartoum Africa/Kigali Africa/Kinshasa Africa/Lagos Africa/Libreville Africa/Lome Africa/Luanda Africa/Lubumbashi Africa/Lusaka Africa/Malabo Africa/Maputo Africa/Maseru Africa/Mbabane Africa/Mogadishu Africa/Monrovia Africa/Nairobi Africa/Ndjamena Africa/Niamey Africa/Nouakchott Africa/Ouagadougou Africa/Porto-Novo Africa/Sao_Tome Africa/Timbuktu Africa/Tripoli Africa/Tunis Africa/Windhoek America/Adak America/Anchorage America/Anguilla America/Antigua America/Araguaina America/Argentina/Buenos_Aires America/Argentina/Catamarca America/Argentina/ComodRivadavia America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/La_Rioja America/Argentina/Mendoza America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Aruba America/Asuncion America/Atikokan America/Atka America/Bahia America/Barbados America/Belem America/Belize America/Blanc-Sablon America/Boa_Vista America/Bogota America/Boise America/Buenos_Aires America/Cambridge_Bay America/Campo_Grande America/Cancun America/Caracas America/Catamarca America/Cayenne America/Cayman America/Chicago America/Chihuahua America/Coral_Harbour America/Cordoba America/Costa_Rica America/Cuiaba America/Curacao America/Danmarkshavn America/Dawson America/Dawson_Creek America/Denver America/Detroit America/Dominica America/Edmonton America/Eirunepe America/El_Salvador America/Ensenada America/Fort_Wayne America/Fortaleza America/Glace_Bay America/Godthab America/Goose_Bay America/Grand_Turk America/Grenada America/Guadeloupe America/Guatemala America/Guayaquil America/Guyana America/Halifax America/Havana America/Hermosillo America/Indiana/Indianapolis America/Indiana/Knox America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Tell_City America/Indiana/Vevay America/Indiana/Vincennes America/Indiana/Winamac America/Indianapolis America/Inuvik America/Iqaluit America/Jamaica America/Jujuy America/Juneau America/Kentucky/Louisville America/Kentucky/Monticello America/Knox_IN America/La_Paz America/Lima America/Los_Angeles America/Louisville America/Maceio America/Managua America/Manaus America/Marigot America/Martinique America/Mazatlan America/Mendoza America/Menominee America/Merida America/Mexico_City America/Miquelon America/Moncton America/Monterrey America/Montevideo America/Montreal America/Montserrat America/Nassau America/New_York America/Nipigon America/Nome America/Noronha America/North_Dakota/Center America/North_Dakota/New_Salem America/Panama America/Pangnirtung America/Paramaribo America/Phoenix America/Port_of_Spain America/Port-au-Prince America/Porto_Acre America/Porto_Velho America/Puerto_Rico America/Rainy_River America/Rankin_Inlet America/Recife America/Regina America/Resolute America/Rio_Branco America/Rosario America/Santiago America/Santo_Domingo America/Sao_Paulo America/Scoresbysund America/Shiprock America/St_Barthelemy America/St_Johns America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Swift_Current America/Tegucigalpa America/Thule America/Thunder_Bay America/Tijuana America/Toronto America/Tortola America/Vancouver America/Virgin America/Whitehorse America/Winnipeg America/Yakutat America/Yellowknife Antarctica/Casey Antarctica/Davis Antarctica/DumontDUrville Antarctica/Mawson Antarctica/McMurdo Antarctica/Palmer Antarctica/South_Pole Antarctica/Syowa Arctic/Longyearbyen Asia/Aden Asia/Almaty Asia/Amman Asia/Anadyr Asia/Aqtau Asia/Aqtobe Asia/Ashgabat Asia/Ashkhabad Asia/Baghdad Asia/Bahrain Asia/Baku Asia/Bangkok Asia/Beirut Asia/Bishkek Asia/Brunei Asia/Calcutta Asia/Choibalsan Asia/Chongqing Asia/Chungking Asia/Colombo Asia/Dacca Asia/Damascus Asia/Dhaka Asia/Dili Asia/Dubai Asia/Dushanbe Asia/Gaza Asia/Harbin Asia/Ho_Chi_Minh Asia/Hong_Kong Asia/Hovd Asia/Irkutsk Asia/Istanbul Asia/Jakarta Asia/Jayapura Asia/Jerusalem Asia/Kabul Asia/Kamchatka Asia/Karachi Asia/Kashgar Asia/Kathmandu Asia/Katmandu Asia/Kolkata Asia/Krasnoyarsk Asia/Kuala_Lumpur Asia/Kuching Asia/Kuwait Asia/Macao Asia/Macau Asia/Magadan Asia/Makassar Asia/Manila Asia/Muscat Asia/Nicosia Asia/Novosibirsk Asia/Omsk Asia/Oral Asia/Phnom_Penh Asia/Pontianak Asia/Pyongyang Asia/Qatar Asia/Qyzylorda Asia/Rangoon Asia/Riyadh Asia/Saigon Asia/Sakhalin Asia/Samarkand Asia/Seoul Asia/Shanghai Asia/Singapore Asia/Taipei Asia/Tashkent Asia/Tbilisi Asia/Tehran Asia/Tel_Aviv Asia/Thimbu Asia/Thimphu Asia/Tokyo Asia/Ujung_Pandang Asia/Ulaanbaatar Asia/Ulan_Bator Asia/Urumqi Asia/Vientiane Asia/Vladivostok Asia/Yakutsk Asia/Yekaterinburg Asia/Yerevan Atlantic/Azores Atlantic/Bermuda Atlantic/Canary Atlantic/Cape_Verde Atlantic/Faeroe Atlantic/Faroe Atlantic/Jan_Mayen Atlantic/Madeira Atlantic/Reykjavik Atlantic/South_Georgia Atlantic/St_Helena Atlantic/Stanley Australia/ACT Australia/Adelaide Australia/Brisbane Australia/Broken_Hill Australia/Canberra Australia/Currie Australia/Darwin Australia/Eucla Australia/Hobart Australia/LHI Australia/Lindeman Australia/Lord_Howe Australia/Melbourne Australia/North Australia/NSW Australia/Perth Australia/Queensland Australia/South Australia/Sydney Australia/Tasmania Australia/Victoria Australia/West Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West Canada/Atlantic Canada/Central Canada/Eastern Canada/East-Saskatchewan Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Saskatchewan Canada/Yukon CET Chile/Continental Chile/EasterIsland CST CST6CDT Cuba EET Egypt Eire EST EST5EDT Etc/GMT Etc/GMT+0 Etc/GMT+1 Etc/GMT+10 Etc/GMT+11 Etc/GMT+12 Etc/GMT+2 Etc/GMT+3 Etc/GMT+4 Etc/GMT+5 Etc/GMT+6 Etc/GMT+7 Etc/GMT+8 Etc/GMT+9 Etc/GMT0 Etc/GMT-0 Etc/GMT-1 Etc/GMT-10 Etc/GMT-11 Etc/GMT-12 Etc/GMT-13 Etc/GMT-14 Etc/GMT-2 Etc/GMT-3 Etc/GMT-4 Etc/GMT-5 Etc/GMT-6 Etc/GMT-7 Etc/GMT-8 Etc/GMT-9 Etc/Greenwich Europe/Amsterdam Europe/Andorra Europe/Athens Europe/Belfast Europe/Belgrade Europe/Berlin Europe/Bratislava Europe/Brussels Europe/Bucharest Europe/Budapest Europe/Chisinau Europe/Copenhagen Europe/Dublin Europe/Gibraltar Europe/Guernsey Europe/Helsinki Europe/Isle_of_Man Europe/Istanbul Europe/Jersey Europe/Kaliningrad Europe/Kiev Europe/Lisbon Europe/Ljubljana Europe/London Europe/Luxembourg Europe/Madrid Europe/Malta Europe/Mariehamn Europe/Minsk Europe/Monaco Europe/Moscow Europe/Nicosia Europe/Oslo Europe/Paris Europe/Prague Europe/Riga Europe/Rome Europe/Samara Europe/San_Marino Europe/Sarajevo Europe/Simferopol Europe/Skopje Europe/Sofia Europe/Stockholm Europe/Tallinn Europe/Tirane Europe/Tiraspol Europe/Uzhgorod Europe/Vaduz Europe/Vatican Europe/Vienna Europe/Vilnius Europe/Volgograd Europe/Warsaw Europe/Zagreb Europe/Zaporozhye Europe/Zurich GB GB-Eire GMT GMT+0 GMT0 GMT-0 Greenwich Hongkong HST Iceland Indian/Antananarivo Indian/Chagos Indian/Christmas Indian/Cocos Indian/Comoro Indian/Kerguelen Indian/Mahe Indian/Maldives Indian/Mauritius Indian/Mayotte Indian/Reunion Iran Israel Jamaica Japan Kwajalein Libya MET Mexico/BajaNorte Mexico/BajaSur Mexico/General MST MST7MDT Navajo NZ NZ-CHAT Pacific/Apia Pacific/Auckland Pacific/Chatham Pacific/Easter Pacific/Efate Pacific/Enderbury Pacific/Fakaofo Pacific/Fiji Pacific/Funafuti Pacific/Galapagos Pacific/Gambier Pacific/Guadalcanal Pacific/Guam Pacific/Honolulu Pacific/Johnston Pacific/Kiritimati Pacific/Kosrae Pacific/Kwajalein Pacific/Majuro Pacific/Marquesas Pacific/Midway Pacific/Nauru Pacific/Niue Pacific/Norfolk Pacific/Noumea Pacific/Pago_Pago Pacific/Palau Pacific/Pitcairn Pacific/Ponape Pacific/Port_Moresby Pacific/Rarotonga Pacific/Saipan Pacific/Samoa Pacific/Tahiti Pacific/Tarawa Pacific/Tongatapu Pacific/Truk Pacific/Wake Pacific/Wallis Pacific/Yap Poland Portugal PRC PST PST8PDT ROC ROK Singapore Turkey US/Alaska US/Aleutian US/Arizona US/Central US/Eastern US/East-Indiana US/Hawaii US/Indiana-Starke US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa UTC WET W-SU"
-elif [ $RELEASE = "7.3" ] || [ $RELEASE = "7.4" ]; then
+# (30 Sep 2018 - (RayD) Updated the list of packages
+  elif [ "$RELEASE" == "7.3" ] || [ "$RELEASE" == "7.4" ]; then
   # TODO: #STB-6
   IPTABLES_RESULT="iptables: Firewall is not running."
   # TODO: #STB-4
-  REQ_1_59_PACKAGES="<CHANGE>"
+  IP6TABLES_RESULT="ip6tables: Firewall is not running."
+  REQ_1_59_PACKAGES="zlib zlib.i686 binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts iptraf kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 make mtools nmap openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio strace sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-xll-server-utils xorg-x11-utils"
   ENTROPY="rngd -r /dev/urandom -o /dev/random -t 0.01"
   ENTROPY_EXTRAOPTIONS=" -r /dev/urandom -o /dev/random -b"  
   TIMEZONE_LIST="Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmara Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Africa/Brazzaville Africa/Bujumbura Africa/Cairo Africa/Casablanca Africa/Ceuta Africa/Conakry Africa/Dakar Africa/Dar_es_Salaam Africa/Djibouti Africa/Douala Africa/El_Aaiun Africa/Freetown Africa/Gaborone Africa/Harare Africa/Johannesburg Africa/Kampala Africa/Khartoum Africa/Kigali Africa/Kinshasa Africa/Lagos Africa/Libreville Africa/Lome Africa/Luanda Africa/Lubumbashi Africa/Lusaka Africa/Malabo Africa/Maputo Africa/Maseru Africa/Mbabane Africa/Mogadishu Africa/Monrovia Africa/Nairobi Africa/Ndjamena Africa/Niamey Africa/Nouakchott Africa/Ouagadougou Africa/Porto-Novo Africa/Sao_Tome Africa/Timbuktu Africa/Tripoli Africa/Tunis Africa/Windhoek America/Adak America/Anchorage America/Anguilla America/Antigua America/Araguaina America/Argentina/Buenos_Aires America/Argentina/Catamarca America/Argentina/ComodRivadavia America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/La_Rioja America/Argentina/Mendoza America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Aruba America/Asuncion America/Atikokan America/Atka America/Bahia America/Barbados America/Belem America/Belize America/Blanc-Sablon America/Boa_Vista America/Bogota America/Boise America/Buenos_Aires America/Cambridge_Bay America/Campo_Grande America/Cancun America/Caracas America/Catamarca America/Cayenne America/Cayman America/Chicago America/Chihuahua America/Coral_Harbour America/Cordoba America/Costa_Rica America/Cuiaba America/Curacao America/Danmarkshavn America/Dawson America/Dawson_Creek America/Denver America/Detroit America/Dominica America/Edmonton America/Eirunepe America/El_Salvador America/Ensenada America/Fort_Wayne America/Fortaleza America/Glace_Bay America/Godthab America/Goose_Bay America/Grand_Turk America/Grenada America/Guadeloupe America/Guatemala America/Guayaquil America/Guyana America/Halifax America/Havana America/Hermosillo America/Indiana/Indianapolis America/Indiana/Knox America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Tell_City America/Indiana/Vevay America/Indiana/Vincennes America/Indiana/Winamac America/Indianapolis America/Inuvik America/Iqaluit America/Jamaica America/Jujuy America/Juneau America/Kentucky/Louisville America/Kentucky/Monticello America/Knox_IN America/La_Paz America/Lima America/Los_Angeles America/Louisville America/Maceio America/Managua America/Manaus America/Marigot America/Martinique America/Mazatlan America/Mendoza America/Menominee America/Merida America/Mexico_City America/Miquelon America/Moncton America/Monterrey America/Montevideo America/Montreal America/Montserrat America/Nassau America/New_York America/Nipigon America/Nome America/Noronha America/North_Dakota/Center America/North_Dakota/New_Salem America/Panama America/Pangnirtung America/Paramaribo America/Phoenix America/Port_of_Spain America/Port-au-Prince America/Porto_Acre America/Porto_Velho America/Puerto_Rico America/Rainy_River America/Rankin_Inlet America/Recife America/Regina America/Resolute America/Rio_Branco America/Rosario America/Santiago America/Santo_Domingo America/Sao_Paulo America/Scoresbysund America/Shiprock America/St_Barthelemy America/St_Johns America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Swift_Current America/Tegucigalpa America/Thule America/Thunder_Bay America/Tijuana America/Toronto America/Tortola America/Vancouver America/Virgin America/Whitehorse America/Winnipeg America/Yakutat America/Yellowknife Antarctica/Casey Antarctica/Davis Antarctica/DumontDUrville Antarctica/Mawson Antarctica/McMurdo Antarctica/Palmer Antarctica/South_Pole Antarctica/Syowa Arctic/Longyearbyen Asia/Aden Asia/Almaty Asia/Amman Asia/Anadyr Asia/Aqtau Asia/Aqtobe Asia/Ashgabat Asia/Ashkhabad Asia/Baghdad Asia/Bahrain Asia/Baku Asia/Bangkok Asia/Beirut Asia/Bishkek Asia/Brunei Asia/Calcutta Asia/Choibalsan Asia/Chongqing Asia/Chungking Asia/Colombo Asia/Dacca Asia/Damascus Asia/Dhaka Asia/Dili Asia/Dubai Asia/Dushanbe Asia/Gaza Asia/Harbin Asia/Ho_Chi_Minh Asia/Hong_Kong Asia/Hovd Asia/Irkutsk Asia/Istanbul Asia/Jakarta Asia/Jayapura Asia/Jerusalem Asia/Kabul Asia/Kamchatka Asia/Karachi Asia/Kashgar Asia/Kathmandu Asia/Katmandu Asia/Kolkata Asia/Krasnoyarsk Asia/Kuala_Lumpur Asia/Kuching Asia/Kuwait Asia/Macao Asia/Macau Asia/Magadan Asia/Makassar Asia/Manila Asia/Muscat Asia/Nicosia Asia/Novosibirsk Asia/Omsk Asia/Oral Asia/Phnom_Penh Asia/Pontianak Asia/Pyongyang Asia/Qatar Asia/Qyzylorda Asia/Rangoon Asia/Riyadh Asia/Saigon Asia/Sakhalin Asia/Samarkand Asia/Seoul Asia/Shanghai Asia/Singapore Asia/Taipei Asia/Tashkent Asia/Tbilisi Asia/Tehran Asia/Tel_Aviv Asia/Thimbu Asia/Thimphu Asia/Tokyo Asia/Ujung_Pandang Asia/Ulaanbaatar Asia/Ulan_Bator Asia/Urumqi Asia/Vientiane Asia/Vladivostok Asia/Yakutsk Asia/Yekaterinburg Asia/Yerevan Atlantic/Azores Atlantic/Bermuda Atlantic/Canary Atlantic/Cape_Verde Atlantic/Faeroe Atlantic/Faroe Atlantic/Jan_Mayen Atlantic/Madeira Atlantic/Reykjavik Atlantic/South_Georgia Atlantic/St_Helena Atlantic/Stanley Australia/ACT Australia/Adelaide Australia/Brisbane Australia/Broken_Hill Australia/Canberra Australia/Currie Australia/Darwin Australia/Eucla Australia/Hobart Australia/LHI Australia/Lindeman Australia/Lord_Howe Australia/Melbourne Australia/North Australia/NSW Australia/Perth Australia/Queensland Australia/South Australia/Sydney Australia/Tasmania Australia/Victoria Australia/West Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West Canada/Atlantic Canada/Central Canada/Eastern Canada/East-Saskatchewan Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Saskatchewan Canada/Yukon CET Chile/Continental Chile/EasterIsland CST CST6CDT Cuba EET Egypt Eire EST EST5EDT Etc/GMT Etc/GMT+0 Etc/GMT+1 Etc/GMT+10 Etc/GMT+11 Etc/GMT+12 Etc/GMT+2 Etc/GMT+3 Etc/GMT+4 Etc/GMT+5 Etc/GMT+6 Etc/GMT+7 Etc/GMT+8 Etc/GMT+9 Etc/GMT0 Etc/GMT-0 Etc/GMT-1 Etc/GMT-10 Etc/GMT-11 Etc/GMT-12 Etc/GMT-13 Etc/GMT-14 Etc/GMT-2 Etc/GMT-3 Etc/GMT-4 Etc/GMT-5 Etc/GMT-6 Etc/GMT-7 Etc/GMT-8 Etc/GMT-9 Etc/Greenwich Europe/Amsterdam Europe/Andorra Europe/Athens Europe/Belfast Europe/Belgrade Europe/Berlin Europe/Bratislava Europe/Brussels Europe/Bucharest Europe/Budapest Europe/Chisinau Europe/Copenhagen Europe/Dublin Europe/Gibraltar Europe/Guernsey Europe/Helsinki Europe/Isle_of_Man Europe/Istanbul Europe/Jersey Europe/Kaliningrad Europe/Kiev Europe/Lisbon Europe/Ljubljana Europe/London Europe/Luxembourg Europe/Madrid Europe/Malta Europe/Mariehamn Europe/Minsk Europe/Monaco Europe/Moscow Europe/Nicosia Europe/Oslo Europe/Paris Europe/Prague Europe/Riga Europe/Rome Europe/Samara Europe/San_Marino Europe/Sarajevo Europe/Simferopol Europe/Skopje Europe/Sofia Europe/Stockholm Europe/Tallinn Europe/Tirane Europe/Tiraspol Europe/Uzhgorod Europe/Vaduz Europe/Vatican Europe/Vienna Europe/Vilnius Europe/Volgograd Europe/Warsaw Europe/Zagreb Europe/Zaporozhye Europe/Zurich GB GB-Eire GMT GMT+0 GMT0 GMT-0 Greenwich Hongkong HST Iceland Indian/Antananarivo Indian/Chagos Indian/Christmas Indian/Cocos Indian/Comoro Indian/Kerguelen Indian/Mahe Indian/Maldives Indian/Mauritius Indian/Mayotte Indian/Reunion Iran Israel Jamaica Japan Kwajalein Libya MET Mexico/BajaNorte Mexico/BajaSur Mexico/General MST MST7MDT Navajo NZ NZ-CHAT Pacific/Apia Pacific/Auckland Pacific/Chatham Pacific/Easter Pacific/Efate Pacific/Enderbury Pacific/Fakaofo Pacific/Fiji Pacific/Funafuti Pacific/Galapagos Pacific/Gambier Pacific/Guadalcanal Pacific/Guam Pacific/Honolulu Pacific/Johnston Pacific/Kiritimati Pacific/Kosrae Pacific/Kwajalein Pacific/Majuro Pacific/Marquesas Pacific/Midway Pacific/Nauru Pacific/Niue Pacific/Norfolk Pacific/Noumea Pacific/Pago_Pago Pacific/Palau Pacific/Pitcairn Pacific/Ponape Pacific/Port_Moresby Pacific/Rarotonga Pacific/Saipan Pacific/Samoa Pacific/Tahiti Pacific/Tarawa Pacific/Tongatapu Pacific/Truk Pacific/Wake Pacific/Wallis Pacific/Yap Poland Portugal PRC PST PST8PDT ROC ROK Singapore Turkey US/Alaska US/Aleutian US/Arizona US/Central US/Eastern US/East-Indiana US/Hawaii US/Indiana-Starke US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa UTC WET W-SU"
 else
-  echo '[Warning]: RHEL Version not matched, tests will be against 6.5.'
+  echo '[Warning]: RHEL Version not matched, tests will be against 7.4.'
+  RELEASE="7.4"
   IPTABLES_RESULT="iptables: Firewall is not running."
-  REQ_1_59_PACKAGES="zlib zlib.i686 binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl openssl.i686 redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk java-1.7.0-openjdk"
+  IP6TABLES_RESULT="ip6tables: Firewall is not running."
+  REQ_1_59_PACKAGES="zlib zlib.i686 binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts iptraf kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 make mtools nmap openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio strace sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-xll-server-utils xorg-x11-utils"
   ENTROPY="rngd -r /dev/urandom -o /dev/random -t 0.01"
   ENTROPY_EXTRAOPTIONS="-i -r /dev/urandom -o /dev/random -b"  
   TIMEZONE_LIST="Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmara Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Africa/Brazzaville Africa/Bujumbura Africa/Cairo Africa/Casablanca Africa/Ceuta Africa/Conakry Africa/Dakar Africa/Dar_es_Salaam Africa/Djibouti Africa/Douala Africa/El_Aaiun Africa/Freetown Africa/Gaborone Africa/Harare Africa/Johannesburg Africa/Kampala Africa/Khartoum Africa/Kigali Africa/Kinshasa Africa/Lagos Africa/Libreville Africa/Lome Africa/Luanda Africa/Lubumbashi Africa/Lusaka Africa/Malabo Africa/Maputo Africa/Maseru Africa/Mbabane Africa/Mogadishu Africa/Monrovia Africa/Nairobi Africa/Ndjamena Africa/Niamey Africa/Nouakchott Africa/Ouagadougou Africa/Porto-Novo Africa/Sao_Tome Africa/Timbuktu Africa/Tripoli Africa/Tunis Africa/Windhoek America/Adak America/Anchorage America/Anguilla America/Antigua America/Araguaina America/Argentina/Buenos_Aires America/Argentina/Catamarca America/Argentina/ComodRivadavia America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/La_Rioja America/Argentina/Mendoza America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Aruba America/Asuncion America/Atikokan America/Atka America/Bahia America/Barbados America/Belem America/Belize America/Blanc-Sablon America/Boa_Vista America/Bogota America/Boise America/Buenos_Aires America/Cambridge_Bay America/Campo_Grande America/Cancun America/Caracas America/Catamarca America/Cayenne America/Cayman America/Chicago America/Chihuahua America/Coral_Harbour America/Cordoba America/Costa_Rica America/Cuiaba America/Curacao America/Danmarkshavn America/Dawson America/Dawson_Creek America/Denver America/Detroit America/Dominica America/Edmonton America/Eirunepe America/El_Salvador America/Ensenada America/Fort_Wayne America/Fortaleza America/Glace_Bay America/Godthab America/Goose_Bay America/Grand_Turk America/Grenada America/Guadeloupe America/Guatemala America/Guayaquil America/Guyana America/Halifax America/Havana America/Hermosillo America/Indiana/Indianapolis America/Indiana/Knox America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Tell_City America/Indiana/Vevay America/Indiana/Vincennes America/Indiana/Winamac America/Indianapolis America/Inuvik America/Iqaluit America/Jamaica America/Jujuy America/Juneau America/Kentucky/Louisville America/Kentucky/Monticello America/Knox_IN America/La_Paz America/Lima America/Los_Angeles America/Louisville America/Maceio America/Managua America/Manaus America/Marigot America/Martinique America/Mazatlan America/Mendoza America/Menominee America/Merida America/Mexico_City America/Miquelon America/Moncton America/Monterrey America/Montevideo America/Montreal America/Montserrat America/Nassau America/New_York America/Nipigon America/Nome America/Noronha America/North_Dakota/Center America/North_Dakota/New_Salem America/Panama America/Pangnirtung America/Paramaribo America/Phoenix America/Port_of_Spain America/Port-au-Prince America/Porto_Acre America/Porto_Velho America/Puerto_Rico America/Rainy_River America/Rankin_Inlet America/Recife America/Regina America/Resolute America/Rio_Branco America/Rosario America/Santiago America/Santo_Domingo America/Sao_Paulo America/Scoresbysund America/Shiprock America/St_Barthelemy America/St_Johns America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Swift_Current America/Tegucigalpa America/Thule America/Thunder_Bay America/Tijuana America/Toronto America/Tortola America/Vancouver America/Virgin America/Whitehorse America/Winnipeg America/Yakutat America/Yellowknife Antarctica/Casey Antarctica/Davis Antarctica/DumontDUrville Antarctica/Mawson Antarctica/McMurdo Antarctica/Palmer Antarctica/South_Pole Antarctica/Syowa Arctic/Longyearbyen Asia/Aden Asia/Almaty Asia/Amman Asia/Anadyr Asia/Aqtau Asia/Aqtobe Asia/Ashgabat Asia/Ashkhabad Asia/Baghdad Asia/Bahrain Asia/Baku Asia/Bangkok Asia/Beirut Asia/Bishkek Asia/Brunei Asia/Calcutta Asia/Choibalsan Asia/Chongqing Asia/Chungking Asia/Colombo Asia/Dacca Asia/Damascus Asia/Dhaka Asia/Dili Asia/Dubai Asia/Dushanbe Asia/Gaza Asia/Harbin Asia/Ho_Chi_Minh Asia/Hong_Kong Asia/Hovd Asia/Irkutsk Asia/Istanbul Asia/Jakarta Asia/Jayapura Asia/Jerusalem Asia/Kabul Asia/Kamchatka Asia/Karachi Asia/Kashgar Asia/Kathmandu Asia/Katmandu Asia/Kolkata Asia/Krasnoyarsk Asia/Kuala_Lumpur Asia/Kuching Asia/Kuwait Asia/Macao Asia/Macau Asia/Magadan Asia/Makassar Asia/Manila Asia/Muscat Asia/Nicosia Asia/Novosibirsk Asia/Omsk Asia/Oral Asia/Phnom_Penh Asia/Pontianak Asia/Pyongyang Asia/Qatar Asia/Qyzylorda Asia/Rangoon Asia/Riyadh Asia/Saigon Asia/Sakhalin Asia/Samarkand Asia/Seoul Asia/Shanghai Asia/Singapore Asia/Taipei Asia/Tashkent Asia/Tbilisi Asia/Tehran Asia/Tel_Aviv Asia/Thimbu Asia/Thimphu Asia/Tokyo Asia/Ujung_Pandang Asia/Ulaanbaatar Asia/Ulan_Bator Asia/Urumqi Asia/Vientiane Asia/Vladivostok Asia/Yakutsk Asia/Yekaterinburg Asia/Yerevan Atlantic/Azores Atlantic/Bermuda Atlantic/Canary Atlantic/Cape_Verde Atlantic/Faeroe Atlantic/Faroe Atlantic/Jan_Mayen Atlantic/Madeira Atlantic/Reykjavik Atlantic/South_Georgia Atlantic/St_Helena Atlantic/Stanley Australia/ACT Australia/Adelaide Australia/Brisbane Australia/Broken_Hill Australia/Canberra Australia/Currie Australia/Darwin Australia/Eucla Australia/Hobart Australia/LHI Australia/Lindeman Australia/Lord_Howe Australia/Melbourne Australia/North Australia/NSW Australia/Perth Australia/Queensland Australia/South Australia/Sydney Australia/Tasmania Australia/Victoria Australia/West Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West Canada/Atlantic Canada/Central Canada/Eastern Canada/East-Saskatchewan Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Saskatchewan Canada/Yukon CET Chile/Continental Chile/EasterIsland CST CST6CDT Cuba EET Egypt Eire EST EST5EDT Etc/GMT Etc/GMT+0 Etc/GMT+1 Etc/GMT+10 Etc/GMT+11 Etc/GMT+12 Etc/GMT+2 Etc/GMT+3 Etc/GMT+4 Etc/GMT+5 Etc/GMT+6 Etc/GMT+7 Etc/GMT+8 Etc/GMT+9 Etc/GMT0 Etc/GMT-0 Etc/GMT-1 Etc/GMT-10 Etc/GMT-11 Etc/GMT-12 Etc/GMT-13 Etc/GMT-14 Etc/GMT-2 Etc/GMT-3 Etc/GMT-4 Etc/GMT-5 Etc/GMT-6 Etc/GMT-7 Etc/GMT-8 Etc/GMT-9 Etc/Greenwich Europe/Amsterdam Europe/Andorra Europe/Athens Europe/Belfast Europe/Belgrade Europe/Berlin Europe/Bratislava Europe/Brussels Europe/Bucharest Europe/Budapest Europe/Chisinau Europe/Copenhagen Europe/Dublin Europe/Gibraltar Europe/Guernsey Europe/Helsinki Europe/Isle_of_Man Europe/Istanbul Europe/Jersey Europe/Kaliningrad Europe/Kiev Europe/Lisbon Europe/Ljubljana Europe/London Europe/Luxembourg Europe/Madrid Europe/Malta Europe/Mariehamn Europe/Minsk Europe/Monaco Europe/Moscow Europe/Nicosia Europe/Oslo Europe/Paris Europe/Prague Europe/Riga Europe/Rome Europe/Samara Europe/San_Marino Europe/Sarajevo Europe/Simferopol Europe/Skopje Europe/Sofia Europe/Stockholm Europe/Tallinn Europe/Tirane Europe/Tiraspol Europe/Uzhgorod Europe/Vaduz Europe/Vatican Europe/Vienna Europe/Vilnius Europe/Volgograd Europe/Warsaw Europe/Zagreb Europe/Zaporozhye Europe/Zurich GB GB-Eire GMT GMT+0 GMT0 GMT-0 Greenwich Hongkong HST Iceland Indian/Antananarivo Indian/Chagos Indian/Christmas Indian/Cocos Indian/Comoro Indian/Kerguelen Indian/Mahe Indian/Maldives Indian/Mauritius Indian/Mayotte Indian/Reunion Iran Israel Jamaica Japan Kwajalein Libya MET Mexico/BajaNorte Mexico/BajaSur Mexico/General MST MST7MDT Navajo NZ NZ-CHAT Pacific/Apia Pacific/Auckland Pacific/Chatham Pacific/Easter Pacific/Efate Pacific/Enderbury Pacific/Fakaofo Pacific/Fiji Pacific/Funafuti Pacific/Galapagos Pacific/Gambier Pacific/Guadalcanal Pacific/Guam Pacific/Honolulu Pacific/Johnston Pacific/Kiritimati Pacific/Kosrae Pacific/Kwajalein Pacific/Majuro Pacific/Marquesas Pacific/Midway Pacific/Nauru Pacific/Niue Pacific/Norfolk Pacific/Noumea Pacific/Pago_Pago Pacific/Palau Pacific/Pitcairn Pacific/Ponape Pacific/Port_Moresby Pacific/Rarotonga Pacific/Saipan Pacific/Samoa Pacific/Tahiti Pacific/Tarawa Pacific/Tongatapu Pacific/Truk Pacific/Wake Pacific/Wallis Pacific/Yap Poland Portugal PRC PST PST8PDT ROC ROK Singapore Turkey US/Alaska US/Aleutian US/Arizona US/Central US/Eastern US/East-Indiana US/Hawaii US/Indiana-Starke US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa UTC WET W-SU"
 fi
 #####
 
-
+# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+##
+##  REQ 1.2 - The “Trellis Directory Permissions” are configured correctly
+##
+#echo '########################################################################################\n\t[REQ 1.2] Trellis Directory Permissions\n########################################################################################'
+#ls -ld /u0*
+#echo -n "[REQ 1.2]   Checking permissions and ownership on /u01-5..." > `tty`
+#echo "[REQ 1.2]   Checking permissions and ownership on /u01-5..."
+#wrong=0
+#for i in 1 2 3 5
+#do
+#    properties=`ls -ld /u0$i`
+#    permission=`echo $properties | awk '{print $1}' | cut -f1 -d"."`
+#    ownership=`echo $properties | awk '{print $3}'`
+#    group_ownership=`echo $properties | awk '{print $4}'`
 #
-#  REQ 1.2 - The “Trellis Directory Permissions” are configured correctly
+#    if [ $TRELLIS_NEW_INSTALL = "Yes" ]; then
+#        EXPECTED_PERMISSION="drwxrwxr-x"
+#    else
+#        if [ $i == 5 ]; then
+#            EXPECTED_PERMISSION="drwxrwxr-x"
+#        else
+#            EXPECTED_PERMISSION="drwxrwx---"
+#        fi	
+#    fi
 #
-echo '########################################################################################\n\t[REQ 1.2] Trellis Directory Permissions\n########################################################################################'
-ls -ld /u0*
-echo -n "[REQ 1.2]   Checking permissions and ownership on /u01-5..." > `tty`
-echo "[REQ 1.2]   Checking permissions and ownership on /u01-5..."
-wrong=0
-for i in 1 2 3 5
-do
-    properties=`ls -ld /u0$i`
-    permission=`echo $properties | awk '{print $1}' | cut -f1 -d"."`
-    ownership=`echo $properties | awk '{print $3}'`
-    group_ownership=`echo $properties | awk '{print $4}'`
-
-    if [ $TRELLIS_NEW_INSTALL = "Yes" ]; then
-        EXPECTED_PERMISSION="drwxrwxr-x"
-    else
-        if [ $i == 5 ]; then
-            EXPECTED_PERMISSION="drwxrwxr-x"
-        else
-            EXPECTED_PERMISSION="drwxrwx---"
-        fi	
-    fi
-
-    if [ "$permission" != "$EXPECTED_PERMISSION" ]
-    then
-        wrong=1
-        echo "Permissions on /u0$i are wrong"
-    fi
-    if [ "$ownership" != "oracle" ]
-    then
-        wrong=1
-        echo "Ownership on /u0$i is wrong"
-    fi
-    if [ "$group_ownership" != "oinstall" ]
-    then
-        wrong=1
-        echo "Group ownership on /u0$i is wrong"
-    fi
-done
-if [ "$wrong" == 0 ]
-then
-    echo "    ==>Permissions or ownership on /u01-5 are correct. OK"
-    echo -e "\t${GREEN}Passed${NONE}" > `tty`
-else
-    echo "    ==>Automatic check failed!"
-    echo -e "\t${RED}Failed${NONE}" > `tty`
-fi
-echo '****************************************************************************'
-echo '****************************************************************************'
+#    if [ "$permission" != "$EXPECTED_PERMISSION" ]
+#    then
+#        wrong=1
+#        echo "Permissions on /u0$i are wrong"
+#    fi
+#    if [ "$ownership" != "oracle" ]
+#    then
+#        wrong=1
+#        echo "Ownership on /u0$i is wrong"
+#    fi
+#    if [ "$group_ownership" != "oinstall" ]
+#    then
+#        wrong=1
+#        echo "Group ownership on /u0$i is wrong"
+#    fi
+#done
+#if [ "$wrong" == 0 ]
+#then
+#    echo "    ==>Permissions or ownership on /u01-5 are correct. OK"
+#    echo -e "\t${GREEN}Passed${NONE}" > `tty`
+#else
+#    echo "    ==>Automatic check failed!"
+#    echo -e "\t${RED}Failed${NONE}" > `tty`
+#fi
+#echo '****************************************************************************'
+#echo '****************************************************************************'
 #####
 
 
@@ -786,8 +797,8 @@ echo '**************************************************************************
 echo '*********************Trellis Environment Variables******************'
 echo '**************The output should contain the below 3 lines***********'
 echo '***********************PATH should contain /sbin/ ******************'
-echo '***********************MW_HOME=/u01/fm/11.1.1.7/********************'
-echo '***************ORACLE_HOME=/u01/app/oracle/product/11.2.0***********'
+echo '***********************MW_HOME=/u01/fm/11.1.0.7/********************'
+echo '***************ORACLE_HOME=/u01/app/oracle/product/12.1.0.2***********'
 echo '***************************ORACLE_SID=orcl**************************'
 echo
 su - oracle -c 'echo PATH=${PATH}'
@@ -821,7 +832,8 @@ fi
 
 echo "Checking oracle user environment variables: ORACLE_HOME..."
 ORA_ORACLE_HOME=`su - oracle -c 'echo ${ORACLE_HOME}'`
-if [ "$ORA_ORACLE_HOME"  == "/u01/app/oracle/product/11.2.0" ]
+# (9-27-18 RayD) Change ORACLE_HOME path from 11.2.0 to 12.1.0.2
+if [ "$ORA_ORACLE_HOME"  == "/u01/app/oracle/product/12.1.0.2" ]
 then
     echo "    Oracle env ORACLE_HOME is configured correctly. OK."
 else
@@ -940,166 +952,169 @@ echo '**************************************************************************
 echo '****************************************************************************'
 #####
 
+# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+##
+##  REQ 1.56 - Confirm Network Manager Disabled
+##
+#echo '******************************NetworkManager Info**************************'
+#echo '***********************Confirm NetworkManager service = disabled*******************'
+#echo -n "[REQ 1.56]  Checking NetworkManager..." > `tty`
+#echo "[REQ 1.56]  Checking NetworkManager..." 
 #
-#  REQ 1.56 - Confirm Network Manager Disabled
-#
-echo '******************************NetworkManager Info**************************'
-echo '***********************Confirm NetworkManager service = disabled*******************'
-echo -n "[REQ 1.56]  Checking NetworkManager..." > `tty`
-echo "[REQ 1.56]  Checking NetworkManager..." 
-
-##  Checking to see if NetworkManager is off. Trellis can run with it
-##  but since we are now turning off X anyway, it is far easier to deal
-##  with networking without it.
-echo ""
-echo "---CHECKING FOR NETWORK MANAGER---"
-NETMAN=`service NetworkManager status`
-NETMAN_STAT=$?
-if [ "$NETMAN_STAT" -eq "0" ]; then
-    echo "    ==>Automatic check failed!"
-    echo "if you want to do it manually you will need to run 'service NetworkManager stop && chkconfig NetworkManager off' on the command line" 
-    echo -e "\t\t\t\t${RED}Failed${NONE}" > `tty`
-else
-  echo "    ==>NetworkManager service is not running. OK."
-  echo -e "\t\t\t\t${GREEN}Passed${NONE}" > `tty`
-fi
-#####
-
-#
-#  REQ 1.57 - The nodemanager content and permissions are configured correctly
-#
-echo '**/etc/xinetd.d/nodemanager Content, Permissions and File Integrity*'
-echo '*****Content must be manually reviewed by PS and/or Engineering*****'
-echo -n "[REQ 1.57]  Checking /etc/xinetd.d/nodemanager..." > `tty`
-echo "[REQ 1.57]  Checking /etc/xinetd.d/nodemanager..." 
-cat /etc/xinetd.d/nodemanager 
-ls -ld /etc/xinetd.d/nodemanager
-file /etc/xinetd.d/nodemanager
-echo
-
-grep -v "#" /etc/xinetd.d/nodemanager > $CFG_OUTPUT_BUNDLE_FOLDER/nodemanager.sys
-grep -v "#" $CFG_OUTPUT_BUNDLE_FOLDER/nodemanager > $CFG_OUTPUT_BUNDLE_FOLDER/nodemanager.good
-DIFF_counter=`diff -w $CFG_OUTPUT_BUNDLE_FOLDER/nodemanager.sys $CFG_OUTPUT_BUNDLE_FOLDER/nodemanager.good | wc -l`
-
-if [ "$DIFF_counter" == 0 ]
-then
-    echo "    ==>/etc/xinetd.d/nodemanager is good. OK."
-    echo -e "\t\t${GREEN}Passed${NONE}" > `tty`
-else
-    echo "    ==>Automatic check failed!"
-    echo "       You could consider replacing /etc/xinetd.d/nodemanager with $CFG_OUTPUT_BUNDLE_FOLDER/nodemanager"
-    echo -e "\t\t${RED}Failed${NONE}" > `tty`
-fi
-echo '****************************************************************************'
-echo '****************************************************************************'
-#####
-
-#
-#  REQ 1.58 - The Sudoers Content is configured correctly
-#
-echo '***************************Sudoers Content**************************'
-echo '*****Content must be manually reviewed by PS and/or Engineering*****'
-echo -n "[REQ 1.58]  Checking sudoers..." > `tty`
-echo "[REQ 1.58]  Checking sudoers..." 
-
-#
-# Test Specific Configuration
-#
-REQ_1_58_SUDOERS_ENTRIES_NOCR=`runuser -l oracle -c 'sudo -l' | grep "(root)"`
-
-if [ -e "/etc/sudoers.d/trellis" ] && [ -s "/etc/sudoers.d/trellis" ]; then
-	REQ_1_58_SUDOERS="/etc/sudoers.d/trellis"
-else
-	REQ_1_58_SUDOERS="/etc/sudoers"
-fi
+###  Checking to see if NetworkManager is off. Trellis can run with it
+###  but since we are now turning off X anyway, it is far easier to deal
+###  with networking without it.
+#echo ""
+#echo "---CHECKING FOR NETWORK MANAGER---"
+#NETMAN=`service NetworkManager status`
+#NETMAN_STAT=$?
+#if [ "$NETMAN_STAT" -eq "0" ]; then
+#    echo "    ==>Automatic check failed!"
+#    echo "if you want to do it manually you will need to run 'service NetworkManager stop && chkconfig NetworkManager off' on the command line" 
+#    echo -e "\t\t\t\t${RED}Failed${NONE}" > `tty`
+#else
+#  echo "    ==>NetworkManager service is not running. OK."
+#  echo -e "\t\t\t\t${GREEN}Passed${NONE}" > `tty`
+#fi
 ######
 
-REQ_1_58_SUDOERS_ENTRIES=`cat ${REQ_1_58_SUDOERS} | egrep "oracle|ORACLE" | wc -l`
-if [ $REQ_1_58_SUDOERS_ENTRIES == 7 ]; then
-    #If the file only has 7 oracle entries in it, just show these
-    cat $REQ_1_58_SUDOERS | egrep "oracle|ORACLE"
-else
-    #Otherwise list out the whole file 0011(omitting comments)
-    cat $REQ_1_58_SUDOERS | egrep "Defaults|#" -v 
-fi
-file $REQ_1_58_SUDOERS
-echo
-wrong=0
-REQ_1_58_SUDOERS_ENTRIES=`runuser -l oracle -c 'sudo -l' | grep "(root)" | wc -l`
-
-if [ -z "$REQ_1_58_SUDOERS_ENTRIES_NOCR" ]; then
-    #If there was no permission to run the sudo command as oracle do a direct compare of the file
-    echo There was no permission to run the sudo command as oracle so a direct compare is performed instead
-    echo
-    grep oracle /etc/sudoers | egrep "oracle|ORACLE" > $CFG_OUTPUT_BUNDLE_FOLDER/sudoers.sys
-	grep oracle /etc/sudoers.d/trellis | egrep "oracle|ORACLE" > $CFG_OUTPUT_BUNDLE_FOLDER/sudoers.d-trellis.sys
-    grep oracle $CFG_OUTPUT_BUNDLE_FOLDER/sudoers | egrep "oracle|ORACLE" > $CFG_OUTPUT_BUNDLE_FOLDER/sudoers.good
-	grep oracle $CFG_OUTPUT_BUNDLE_FOLDER/sudoers | egrep "oracle|ORACLE" > $CFG_OUTPUT_BUNDLE_FOLDER/sudoers.d-trellis.good
-
-    DIFF_counter=`diff $CFG_OUTPUT_BUNDLE_FOLDER/sudoers.good $CFG_OUTPUT_BUNDLE_FOLDER/sudoers.sys -w | wc -l`
-    if [ "$DIFF_counter" == 0 ]
-    then
-        #All matches
-        wrong=0
-    else
-        #They did not match
-        wrong=1
-    fi
-else
-    if [ $REQ_1_58_SUDOERS_ENTRIES -ge 7 ]; then
-        echo 
-        echo "----Sudoers List----"
-		echo "$REQ_1_58_SUDOERS_ENTRIES_NOCR"	
-		echo
-	
-        #Otherwise, check the permissions individually
-        SUDOERS_CHECK_PREFIX="(root) NOPASSWD:"
-        
-        #Build Sudoers List
-        SUDOERS_LIST="/etc/init.d/trellis"
-        SUDOERS_LIST="$SUDOERS_LIST /u03/root/disable_escalation.sh"
-        SUDOERS_LIST="$SUDOERS_LIST /u03/root/enable_nodemanager.sh"
-        SUDOERS_LIST="$SUDOERS_LIST /u03/root/ohs_enable_chroot.sh"
-        SUDOERS_LIST="$SUDOERS_LIST /u03/root/postinstall_env_setup.sh"
-        SUDOERS_LIST="$SUDOERS_LIST /u03/root/preinstall_env_setup.sh"  
-        SUDOERS_LIST="$SUDOERS_LIST /u03/root/sli_install.bin"
-
-        for i in $SUDOERS_LIST
-        do
-          SUDOERS_CHECK_FILE=$i
-          echo "Checking $i sudoer entry"
-        
-          if [ `echo "$REQ_1_58_SUDOERS_ENTRIES_NOCR" | grep "$SUDOERS_CHECK_PREFIX" | grep "$SUDOERS_CHECK_FILE" | wc -l` == 1 ]
-          then
-              echo " - Permissions on $SUDOERS_CHECK_FILE are OK"
-          else
-              wrong=1
-              echo " - Permissions on $SUDOERS_CHECK_FILE are missing or incorrect"    
-          fi		
-        done
-    else
-        wrong=1
-        echo "Incorrect number of expected sudoer entries, engineering require this to be in a specific format for installation"        
-        echo "NOTE: Sudoer aliases are not currently supported, if these are to be used, it must be changed AFTER installation"        
-    fi
-fi
-
+# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+##
+##  REQ 1.57 - The nodemanager content and permissions are configured correctly
+##
+#echo '**/etc/xinetd.d/nodemanager Content, Permissions and File Integrity*'
+#echo '*****Content must be manually reviewed by PS and/or Engineering*****'
+#echo -n "[REQ 1.57]  Checking /etc/xinetd.d/nodemanager..." > `tty`
+#echo "[REQ 1.57]  Checking /etc/xinetd.d/nodemanager..." 
+#cat /etc/xinetd.d/nodemanager 
+#ls -ld /etc/xinetd.d/nodemanager
+#file /etc/xinetd.d/nodemanager
+#echo
 #
-#  Output Test Results
+#grep -v "#" /etc/xinetd.d/nodemanager > $CFG_OUTPUT_BUNDLE_FOLDER/nodemanager.sys
+#grep -v "#" $CFG_OUTPUT_BUNDLE_FOLDER/nodemanager > $CFG_OUTPUT_BUNDLE_FOLDER/nodemanager.good
+#DIFF_counter=`diff -w $CFG_OUTPUT_BUNDLE_FOLDER/nodemanager.sys $CFG_OUTPUT_BUNDLE_FOLDER/nodemanager.good | wc -l`
 #
-echo
-if [ $wrong == 0 ]
-then
-    echo "    ==>/etc/sudoers settings are correct. OK"
-    echo -e "\t\t\t\t\t${GREEN}Passed${NONE}" > `tty`
-else
-    echo "    ==>Automatic check failed!"
-    echo "       You could consider appending /etc/sudoers with the contents of $CFG_OUTPUT_BUNDLE_FOLDER/sudoers"		
-    echo -e "\t\t\t\t\t${RED}Failed${NONE}" > `tty`
-fi
+#if [ "$DIFF_counter" == 0 ]
+#then
+#    echo "    ==>/etc/xinetd.d/nodemanager is good. OK."
+#    echo -e "\t\t${GREEN}Passed${NONE}" > `tty`
+#else
+#    echo "    ==>Automatic check failed!"
+#    echo "       You could consider replacing /etc/xinetd.d/nodemanager with $CFG_OUTPUT_BUNDLE_FOLDER/nodemanager"
+#    echo -e "\t\t${RED}Failed${NONE}" > `tty`
+#fi
+#echo '****************************************************************************'
+#echo '****************************************************************************'
+#####
 
-echo '****************************************************************************'
-echo '****************************************************************************'
+# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+##
+##  REQ 1.58 - The Sudoers Content is configured correctly
+##
+#echo '***************************Sudoers Content**************************'
+#echo '*****Content must be manually reviewed by PS and/or Engineering*****'
+#echo -n "[REQ 1.58]  Checking sudoers..." > `tty`
+#echo "[REQ 1.58]  Checking sudoers..." 
+#
+##
+## Test Specific Configuration
+##
+#REQ_1_58_SUDOERS_ENTRIES_NOCR=`runuser -l oracle -c 'sudo -l' | grep "(root)"`
+#
+#if [ -e "/etc/sudoers.d/trellis" ] && [ -s "/etc/sudoers.d/trellis" ]; then
+#	REQ_1_58_SUDOERS="/etc/sudoers.d/trellis"
+#else
+#	REQ_1_58_SUDOERS="/etc/sudoers"
+#fi
+#######
+#
+#REQ_1_58_SUDOERS_ENTRIES=`cat ${REQ_1_58_SUDOERS} | egrep "oracle|ORACLE" | wc -l`
+#if [ $REQ_1_58_SUDOERS_ENTRIES == 7 ]; then
+#    #If the file only has 7 oracle entries in it, just show these
+#    cat $REQ_1_58_SUDOERS | egrep "oracle|ORACLE"
+#else
+#    #Otherwise list out the whole file 0011(omitting comments)
+#    cat $REQ_1_58_SUDOERS | egrep "Defaults|#" -v 
+#fi
+#file $REQ_1_58_SUDOERS
+#echo
+#wrong=0
+#REQ_1_58_SUDOERS_ENTRIES=`runuser -l oracle -c 'sudo -l' | grep "(root)" | wc -l`
+#
+#if [ -z "$REQ_1_58_SUDOERS_ENTRIES_NOCR" ]; then
+#    #If there was no permission to run the sudo command as oracle do a direct compare of the file
+#    echo There was no permission to run the sudo command as oracle so a direct compare is performed instead
+#    echo
+#    grep oracle /etc/sudoers | egrep "oracle|ORACLE" > $CFG_OUTPUT_BUNDLE_FOLDER/sudoers.sys
+#	grep oracle /etc/sudoers.d/trellis | egrep "oracle|ORACLE" > $CFG_OUTPUT_BUNDLE_FOLDER/sudoers.d-trellis.sys
+#    grep oracle $CFG_OUTPUT_BUNDLE_FOLDER/sudoers | egrep "oracle|ORACLE" > $CFG_OUTPUT_BUNDLE_FOLDER/sudoers.good
+#	grep oracle $CFG_OUTPUT_BUNDLE_FOLDER/sudoers | egrep "oracle|ORACLE" > $CFG_OUTPUT_BUNDLE_FOLDER/sudoers.d-trellis.good
+#
+#    DIFF_counter=`diff $CFG_OUTPUT_BUNDLE_FOLDER/sudoers.good $CFG_OUTPUT_BUNDLE_FOLDER/sudoers.sys -w | wc -l`
+#    if [ "$DIFF_counter" == 0 ]
+#    then
+#        #All matches
+#        wrong=0
+#    else
+#        #They did not match
+#        wrong=1
+#    fi
+#else
+#    if [ $REQ_1_58_SUDOERS_ENTRIES -ge 7 ]; then
+#        echo 
+#        echo "----Sudoers List----"
+#		echo "$REQ_1_58_SUDOERS_ENTRIES_NOCR"	
+#		echo
+#	
+#        #Otherwise, check the permissions individually
+#        SUDOERS_CHECK_PREFIX="(root) NOPASSWD:"
+#        
+#        #Build Sudoers List
+#        SUDOERS_LIST="/etc/init.d/trellis"
+#        SUDOERS_LIST="$SUDOERS_LIST /u03/root/disable_escalation.sh"
+#        SUDOERS_LIST="$SUDOERS_LIST /u03/root/enable_nodemanager.sh"
+#        SUDOERS_LIST="$SUDOERS_LIST /u03/root/ohs_enable_chroot.sh"
+#        SUDOERS_LIST="$SUDOERS_LIST /u03/root/postinstall_env_setup.sh"
+#        SUDOERS_LIST="$SUDOERS_LIST /u03/root/preinstall_env_setup.sh"  
+#        SUDOERS_LIST="$SUDOERS_LIST /u03/root/sli_install.bin"
+#
+#        for i in $SUDOERS_LIST
+#        do
+#          SUDOERS_CHECK_FILE=$i
+#          echo "Checking $i sudoer entry"
+#        
+#          if [ `echo "$REQ_1_58_SUDOERS_ENTRIES_NOCR" | grep "$SUDOERS_CHECK_PREFIX" | grep "$SUDOERS_CHECK_FILE" | wc -l` == 1 ]
+#          then
+#              echo " - Permissions on $SUDOERS_CHECK_FILE are OK"
+#          else
+#              wrong=1
+#              echo " - Permissions on $SUDOERS_CHECK_FILE are missing or incorrect"    
+#          fi		
+#        done
+#    else
+#        wrong=1
+#        echo "Incorrect number of expected sudoer entries, engineering require this to be in a specific format for installation"        
+#        echo "NOTE: Sudoer aliases are not currently supported, if these are to be used, it must be changed AFTER installation"        
+#    fi
+#fi
+#
+##
+##  Output Test Results
+##
+#echo
+#if [ $wrong == 0 ]
+#then
+#    echo "    ==>/etc/sudoers settings are correct. OK"
+#    echo -e "\t\t\t\t\t${GREEN}Passed${NONE}" > `tty`
+#else
+#    echo "    ==>Automatic check failed!"
+#    echo "       You could consider appending /etc/sudoers with the contents of $CFG_OUTPUT_BUNDLE_FOLDER/sudoers"		
+#    echo -e "\t\t\t\t\t${RED}Failed${NONE}" > `tty`
+#fi
+#
+#echo '****************************************************************************'
+#echo '****************************************************************************'
 #####
 
 #
@@ -1146,7 +1161,8 @@ echo '*** ant which is packages with the Trellis installer ***************'
 echo -n "[REQ 1.60]  Checking for ANT package..." > `tty`
 echo "[REQ 1.60]  Checking for ANT package..." 
 CMD_RPM_SEARCH=`rpm -q apache-ant`
-if [ "$$CMD_RPM_SEARCH" != "package ant is not installed" ]
+# (9-27-18 RayD) Changed string in test from ant to apache-ant
+if [ "$CMD_RPM_SEARCH" != "package apache-ant is not installed" ]
 then
     echo "    ==>Automatic check failed!"
     echo "    ==> ANT is installed."
@@ -1198,7 +1214,8 @@ else
 fi
 
 SYSCTRL_PARM="net.ipv4.ip_local_port_range"
-SYSCTRL_PARM_value="9000 65535"
+# (9-27-18 RayD) Changed value from 65535 to 65500, taken from the 7.3 kickstart
+SYSCTRL_PARM_value="9000 65500"
 SYSCTRL_PARM_current=`grep $SYSCTRL_PARM /etc/sysctl.conf | grep -v "#" | tr -d $SYSCTRL_PARM | tr -d "=" | sed 's/^[ \t]*//;s/[ \t]*$//'`
 rows=`grep $SYSCTRL_PARM /etc/sysctl.conf | grep -v "#" | wc -l`
 
@@ -1227,7 +1244,8 @@ SYSCTRL_LIST="$SYSCTRL_LIST net.core.rmem_default"
 SYSCTRL_LIST="$SYSCTRL_LIST net.core.rmem_max"
 SYSCTRL_LIST="$SYSCTRL_LIST net.core.wmem_default"
 SYSCTRL_LIST="$SYSCTRL_LIST net.core.wmem_max"
-SYSCTRL_LIST="$SYSCTRL_LIST kernel.random.write_wakeup_threshold"
+# (9-27-18 RayD) Remove kernel.random.write_wakeup_threshold, which is not in the 7.3 kickstart
+# SYSCTRL_LIST="$SYSCTRL_LIST kernel.random.write_wakeup_threshold"
 
 for i in $SYSCTRL_LIST
 do
@@ -1242,9 +1260,11 @@ do
   elif [ "$SYSCTRL_PARM" = "fs.file-max" ]; then
 	SYSCTRL_PARM_min=6815744
   elif [ "$SYSCTRL_PARM" = "kernel.shmall" ]; then
-	SYSCTRL_PARM_min=2097152
+# (9-27-18 RayD) Changed value from 2097152 to 3774873, taken from the 7.3 kickstart
+	SYSCTRL_PARM_min=3774873
   elif [ "$SYSCTRL_PARM" = "kernel.shmmax" ]; then
-	  SYSCTRL_PARM_min=536870912
+# (9-27-18 RayD) Changed value from 536870912 to 15461882265, taken from the 7.3 kickstart
+	  SYSCTRL_PARM_min=15461882265
   elif [ "$SYSCTRL_PARM" = "kernel.shmmni" ]; then
 	SYSCTRL_PARM_min=4096
   elif [ "$SYSCTRL_PARM" = "net.core.rmem_default" ]; then
@@ -1255,8 +1275,9 @@ do
 	SYSCTRL_PARM_min=262144  
   elif [ "$SYSCTRL_PARM" = "net.core.wmem_max" ]; then
 	SYSCTRL_PARM_min=1048586  
-  elif [ "$SYSCTRL_PARM" = "kernel.random.write_wakeup_threshold" ]; then
-	SYSCTRL_PARM_min=1024  
+# (9-27-18 RayD) Remove kernel.random.write_wakeup_threshold, which is not in the 7.3 kickstart
+#  elif [ "$SYSCTRL_PARM" = "kernel.random.write_wakeup_threshold" ]; then
+#	SYSCTRL_PARM_min=1024  
   fi
   
   if [ $rows == 0 ]; then
@@ -1291,29 +1312,30 @@ echo '**************************************************************************
 echo '****************************************************************************'
 #####
 
-#
-#  REQ 1.62 - The “/etc/limits.conf” file is configured correctly
-#
-echo '**********/etc/security/limits.conf Content and File Integrity******'
-echo '******Content must be manually reviewed by PS and/or Engineering****'
-echo -n "[REQ 1.62]  Checking /etc/limits.conf..." > `tty`
-echo "[REQ 1.62]  Checking /etc/limits.conf..."
-cat /etc/security/limits.conf
-file /etc/security/limits.conf
-echo
-grep oracle /etc/security/limits.conf | grep -v "#" > $CFG_OUTPUT_BUNDLE_FOLDER/limits.conf-installed
-DIFF_counter=`diff $CFG_OUTPUT_BUNDLE_FOLDER/limits.conf $CFG_OUTPUT_BUNDLE_FOLDER/limits.conf-installed | wc -l`
-if [ "$DIFF_counter" == 0 ]
-then
-    echo "    ==>/etc/security/limits.conf is good. OK."
-    echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`
-else
-    echo "    ==>Automatic check failed!"
-    echo "       Check formatting for oracle limits"
-    echo -e "\t\t\t${RED}Failed${NONE}" > `tty`
-fi
-echo '****************************************************************************'
-echo '****************************************************************************'
+# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+##
+##  REQ 1.62 - The “/etc/limits.conf” file is configured correctly
+##
+#echo '**********/etc/security/limits.conf Content and File Integrity******'
+#echo '******Content must be manually reviewed by PS and/or Engineering****'
+#echo -n "[REQ 1.62]  Checking /etc/limits.conf..." > `tty`
+#echo "[REQ 1.62]  Checking /etc/limits.conf..."
+#cat /etc/security/limits.conf
+#file /etc/security/limits.conf
+#echo
+#grep oracle /etc/security/limits.conf | grep -v "#" > $CFG_OUTPUT_BUNDLE_FOLDER/limits.conf-installed
+#DIFF_counter=`diff $CFG_OUTPUT_BUNDLE_FOLDER/limits.conf $CFG_OUTPUT_BUNDLE_FOLDER/limits.conf-installed | wc -l`
+#if [ "$DIFF_counter" == 0 ]
+#then
+#    echo "    ==>/etc/security/limits.conf is good. OK."
+#    echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`
+#else
+#    echo "    ==>Automatic check failed!"
+#    echo "       Check formatting for oracle limits"
+#    echo -e "\t\t\t${RED}Failed${NONE}" > `tty`
+#fi
+#echo '****************************************************************************'
+#echo '****************************************************************************'
 #####
 
 #
@@ -1376,11 +1398,12 @@ echo "[REQ 1.65]  Checking for Licence server symlinks..."
 ##  Bug prevents the license server from working.
 echo ""
 echo "---CHECKING FOR LICENSE SERVER SYMLINKS---"
-if [ $RELEASE = "5.9" ]; then
+if [ "$RELEASE" == "5.9" ]; then
     echo "    ==>Not Applicable for Red Hat 5.9.  OK."
     echo "  N/A" > `tty`
 else
-    existing_symlinks=`ls -l /usr/lib/licenseserver | egrep "libcrypto.so.1.0.0 -> /usr/lib/libcrypto.so.10|libssl.so.1.0.0 -> /usr/lib/libssl.so.10" | wc -l`
+# (9-27-18 RayD) Change licensing folder to /u02/licensing
+    existing_symlinks=`ls -l /u02/licensing | egrep "libcrypto.so.1.0.0 -> /usr/lib/libcrypto.so.1.0.1e|libssl.so.1.0.0 -> /usr/lib/libssl.so.1.0.1e" | wc -l`
 
     if [ "$existing_symlinks" == 2 ]
     then
@@ -1462,12 +1485,12 @@ fi
 #####
 
 #
-#  REQ 1.68 - Confirm /tmp permissions are correct
+#  REQ 1.68 - Checking global Java version
 #
 echo '**************************Global Java Version*******************************'
 echo '****************************************************************************'
 echo 
-echo -n '[REQ 1.68]  Checking Global Java version' > `tty`
+echo -n '[REQ 1.68]  Checking Global Java version ' > `tty`
 echo '[REQ 1.68]  Checking Global Java version'
 if sudo -u oracle test -e `which java`]; then
     _java=java
@@ -1494,119 +1517,189 @@ fi
 
 if [ $REQ_1_68_PASS == $true ]; then
     echo "    ==>File permissions retention is correct. OK"
-    echo -e "\t\t${GREEN}Passed${NONE}" > `tty`
+    echo -e "${GREEN}Passed${NONE}" > `tty`
 else
     echo "    ==>Automatic check failed!"
-    echo -e "\t\t${RED}Failed${NONE}" > `tty`
+    echo -e "${RED}Failed${NONE}" > `tty`
 fi
 #####
+
+# (26 Sep 2018 - (RayD) Added test
+#
+#  REQ 1.69 - Confirm /home/oracle owner is correct
+#
+echo '**************************\home\oracle ownership****************************'
+echo '****************************************************************************'
+echo 
+echo -n '[REQ 1.69]  Checking /home/oracle ownership' > `tty`
+echo '[REQ 1.69]  Checking /home/oracle ownership'
+
+	wrong=0
+    properties=`ls -ld /home/oracle`
+    ownership=`echo $properties | awk '{print $3}'`
+    group_ownership=`echo $properties | awk '{print $4}'`
+	echo "$properties"
+	
+    if [ "$ownership" != "oracle" ];
+    then
+        wrong=1
+        echo "Ownership of %ownership on /home/oracle is wrong"
+    fi
+    if [ "$group_ownership" != "oinstall" ];
+    then
+        wrong=1
+        echo "Group ownership of $group_ownership on /home/oracle is wrong"
+    fi
+	
+	if [ $wrong == 0 ]; then
+		echo "    ==>Ownership is correct. OK"
+		echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`
+	else
+		echo "    ==>Automatic check failed!"
+		echo -e "\t\t\t${RED}Failed${NONE}" > `tty`
+	fi
+#####
+
+
+# (30 Sep 2018 - (RayD) Added test
+#
+#  REQ 1.70 - Confirm enough swap file space
+#
+echo '**************************Swap File space***********************************'
+echo '****************************************************************************'
+echo 
+echo -n '[REQ 1.70]  Checking swap file space' > `tty`
+echo '[REQ 1.70]  Checking swap file space'
+
+	wrong=0
+    swaptotal=`free -h | grep 'Swap:' | awk '{print $2}'`
+    swapfree=`free -h | grep 'Swap:' | awk '{print $4}'`
+	swapfreenumber=`free -h | grep 'Swap:' | awk '{print $4}' | cut -d 'G' -f 1`
+	echo " There is $swapfree of free swap file space out of $swaptotal total.  You should have at least 10G free before you begin the install/upgrade."
+    if [ $swapfreenumber -le 10 ];
+    then
+        wrong=1
+        echo "Insufficient swap file space"
+    fi
+	
+	if [ $wrong == 0 ]; then
+		echo "    ==>Free swap file space is correct. OK"
+		echo -e "\t\t\t\t${GREEN}Passed${NONE}" > `tty`
+	else
+		echo "    ==>Automatic check failed!"
+		echo -e "\t\t\t\t${RED}Failed${NONE}" > `tty`
+	fi
+#####
+
 
 ###############################################################################
 #       REQ 2.* HARDWARE CHECKS
 ###############################################################################
 
+# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+##
+##  REQ 2.2 - Memory Allocation reaches minimum requirements
+##
+#echo
+#echo '******************* Memory Info ********************'
 #
-#  REQ 2.2 - Memory Allocation reaches minimum requirements
+#echo -n "[REQ 2.2]   Checking Allocated Memory..." > `tty`
+#echo "[REQ 2.2]   Checking Allocated Memory..." 
+#echo 'Verify that server has 24GB (back) or 32GB (front)'
+#MEM=`free -m | grep Mem | cut -f2 -d":" | awk '{print $1}'`
+#echo "Current Memory: $CUR_MEMORY"
+#echo
+#if [ $TRELLIS_HOST_PROMPT = b ]; then
+#    if [ "$MEM" -gt 23900 ]
+#    then
+#        echo " - INFO: Memory on back is greater than 24GB. OK."
+#    else
+#        echo " - WARNING: Memory on back is less than 24GB"
+#        wrong=1
+#    fi
+#else
+#    if [ "$MEM" -gt 31900 ]
+#    then
+#        echo " - INFO: Memory on front is greater than 32GB. OK."
+#    else
+#        echo " - WARNING: Memory on front is less than 32GB"    
+#        wrong=1
+#    fi    
+#fi
 #
-echo
-echo '******************* Memory Info ********************'
-echo
-echo -n "[REQ 2.2]   Checking Allocated Memory..." > `tty`
-echo "[REQ 2.2]   Checking Allocated Memory..." 
-echo 'Verify that server has 24GB (back) or 32GB (front)'
-MEM=`free -m | grep Mem | cut -f2 -d":" | awk '{print $1}'`
-echo "Current Memory: $CUR_MEMORY"
-echo
-if [ $TRELLIS_HOST_PROMPT = b ]; then
-    if [ "$MEM" -gt 23900 ]
-    then
-        echo " - INFO: Memory on back is greater than 24GB. OK."
-    else
-        echo " - WARNING: Memory on back is less than 24GB"
-        wrong=1
-    fi
-else
-    if [ "$MEM" -gt 31900 ]
-    then
-        echo " - INFO: Memory on front is greater than 32GB. OK."
-    else
-        echo " - WARNING: Memory on front is less than 32GB"    
-        wrong=1
-    fi    
-fi
+#echo
+#if [ "$wrong" == 0 ]
+#then
+#    echo "    ==>Memory Allocation Sufficient. OK"
+#    echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`
+#else
+#    echo "    Please check memory specifications"
+#    echo "    ==>Automatic check failed!"
+#    echo -e "\t\t\t${RED}Failed${NONE}" > `tty`
+#fi
 
-echo
-if [ "$wrong" == 0 ]
-then
-    echo "    ==>Memory Allocation Sufficient. OK"
-    echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`
-else
-    echo "    Please check memory specifications"
-    echo "    ==>Automatic check failed!"
-    echo -e "\t\t\t${RED}Failed${NONE}" > `tty`
-fi
-
-echo '****************************************************************************'
-echo '****************************************************************************'
+#echo '****************************************************************************'
+#echo '****************************************************************************'
 #####
 
+# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+##
+##  REQ 2.3 - HDD I/O Throughput reaches minimum requirements
+##
+#echo ""
+#echo '************************** Disk Performance (Flushed-Write) ****************************'
+#echo -n '[REQ 2.3]   Checking disk speed access (Un-Cached)...' > `tty`
+#echo '[REQ 2.3]   Checking disk speed access (Un-Cached)...' 
+#echo "INFO: Speeds of 150 MB/s or greater are required for Trellis"
 #
-#  REQ 2.3 - HDD I/O Throughput reaches minimum requirements
+## Remove file if it exists from previous check
+#rm -f ${DD_OUTFILE}
 #
-echo ""
-echo '************************** Disk Performance (Flushed-Write) ****************************'
-echo -n '[REQ 2.3]   Checking disk speed access (Un-Cached)...' > `tty`
-echo '[REQ 2.3]   Checking disk speed access (Un-Cached)...' 
-echo "INFO: Speeds of 150 MB/s or greater are required for Trellis"
-
-# Remove file if it exists from previous check
-rm -f ${DD_OUTFILE}
-
-PASS=1
-SUM_SPEED=0
-
-while [ $PASS -lt 6 ]; do
-  DD=`dd if=/dev/zero of=${DD_OUTFILE} ${DD_PARAM_FLUSHED} 2>&1 | grep copied`
-  echo "    Pass $PASS: $DD"
-  SPEED=`echo $DD | awk -F, '{ print $NF }' | cut -f1 -d"." | sed 's@ @@1'`
-  SIZE=`echo $SPEED | awk '{ print $2 }'`
-  if [ $SIZE = "GB/s" ]; then
-    SPEED2=$((`echo $SPEED | awk '{ print $1 }'`)*1024)
-    echo "    SUCCESS: Pass $PASS - $SPEED - well above the required threshold" 
-  elif [ $SIZE = "MB/s" ]; then
-    SPEED2=`echo $SPEED | awk '{ print $1 }'`
-    if [ $SPEED2 -ge 150 ]; then
-      echo "    SUCCESS: Pass $PASS - $SPEED - acceptable for Trellis installs" 
-    else
-      echo "    WARNING: Pass $PASS - $SPEED - too low for good performance with Trellis"
-    fi
-  else
-    SPEED2=0
-    echo "    WARNING: Pass $PASS - $SPEED - too low for good performance with Trellis"
-  fi
-  
-  SUM_SPEED=$((SUM_SPEED + SPEED2))
-  let PASS=PASS+1
-  rm -f ${DD_OUTFILE} 
-done
-echo
-
-SUM_SPEED=$((SUM_SPEED / 5))
-
-echo -e "    INFO: Average speed $SUM_SPEED MB/s"
-
-if [ $SUM_SPEED -lt 150 ]; then
-	echo "    ==>Automatic check failed!"
-	echo -e "\t\t${RED}Failed${NONE}" > `tty`
-else
-	echo "    ==>Average disk throughput. OK"
-	echo -e "\t\t${GREEN}Passed${NONE}" > `tty`
-fi
-
-echo -e "            INFO: Average speed $SUM_SPEED MB/s" > `tty`
-
-echo '****************************************************************************'
-echo 
+#PASS=1
+#SUM_SPEED=0
+#
+#while [ $PASS -lt 6 ]; do
+#  DD=`dd if=/dev/zero of=${DD_OUTFILE} ${DD_PARAM_FLUSHED} 2>&1 | grep copied`
+#  echo "    Pass $PASS: $DD"
+#  SPEED=`echo $DD | awk -F, '{ print $NF }' | cut -f1 -d"." | sed 's@ @@1'`
+#  SIZE=`echo $SPEED | awk '{ print $2 }'`
+#  if [ $SIZE = "GB/s" ]; then
+#    SPEED2=$((`echo $SPEED | awk '{ print $1 }'`)*1024)
+#    echo "    SUCCESS: Pass $PASS - $SPEED - well above the required threshold" 
+#  elif [ $SIZE = "MB/s" ]; then
+#    SPEED2=`echo $SPEED | awk '{ print $1 }'`
+#    if [ $SPEED2 -ge 150 ]; then
+#      echo "    SUCCESS: Pass $PASS - $SPEED - acceptable for Trellis installs" 
+#    else
+#      echo "    WARNING: Pass $PASS - $SPEED - too low for good performance with Trellis"
+#    fi
+#  else
+#    SPEED2=0
+#    echo "    WARNING: Pass $PASS - $SPEED - too low for good performance with Trellis"
+#  fi
+#  
+#  SUM_SPEED=$((SUM_SPEED + SPEED2))
+#  let PASS=PASS+1
+#  rm -f ${DD_OUTFILE} 
+#done
+#echo
+#
+#SUM_SPEED=$((SUM_SPEED / 5))
+#
+#echo -e "    INFO: Average speed $SUM_SPEED MB/s"
+#
+#if [ $SUM_SPEED -lt 150 ]; then
+#	echo "    ==>Automatic check failed!"
+#	echo -e "\t\t${RED}Failed${NONE}" > `tty`
+#else
+#	echo "    ==>Average disk throughput. OK"
+#	echo -e "\t\t${GREEN}Passed${NONE}" > `tty`
+#fi
+#
+#echo -e "            INFO: Average speed $SUM_SPEED MB/s" > `tty`
+#
+#echo '****************************************************************************'
+#echo 
 #####
 
 #
@@ -2015,6 +2108,36 @@ fi
 echo '****************************************************************************'
 #####
 
+
+#
+#  REQ 4.5 - IPv6 Firewall Is Disabled
+#
+echo '****************************************************************************'
+echo '******************************IP6Tables Info**************************'
+echo '***********************Confirm IP6Tables service = disabled*******************'
+echo -n "[REQ 4.5]   Checking Firewall is disabled (ip6tables)..." > `tty`
+echo "[REQ 4.5]   Checking Firewall is disabled (ip6tables)..." 
+
+##  Check to be sure ip6tables is turned off
+echo ""
+echo "---CHECKING TO BE SURE IPTABLES IS TURNED OFF---"
+IP6TABLES=`service ip6tables status`
+
+if [ `echo "$IP6TABLES" | grep "$IP6TABLES_RESULT" | wc -l` != 1 ]; then
+	echo "    ==>Automatic check failed!"
+    echo "If you want to do it manually you will need to run 'service ip6tables stop && chkconfig ip6tables off' on the command line"    
+	
+    #echo "  Automatic check failed!" > `tty`
+	echo -e "\t${RED}Failed${NONE}" > `tty`
+else
+  echo "    ==>ip6tables service is not running. OK."
+  echo -e "\t${GREEN}Passed${NONE}" > `tty`
+fi
+echo '****************************************************************************'
+echo '****************************************************************************'
+#####
+
+
 ###############################################################################
 #       REQ 5.* NETWORK CHECKS
 ###############################################################################
@@ -2129,6 +2252,7 @@ fi
 echo '****************************************************************************'
 echo '****************************************************************************'
 #####
+
 
 #
 #  REQ 5.8 - Time Zone set to supported Time Zone
