@@ -1,0 +1,10 @@
+# Ignore certificates & keys
+*.ppk
+*.jks
+*.cer
+*.pem
+.pki/*
+
+
+# Ignore log files
+*.log
