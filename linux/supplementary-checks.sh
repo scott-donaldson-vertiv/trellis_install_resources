@@ -2057,6 +2057,7 @@ echo
 echo -n '[REQ 3.1]   Checking VMWare Tools are installed' > `tty`
 echo '[REQ 3.1]   Checking VMWare Tools are installed'
 
+# (12 Oct 2018 - RayD) Add test open-vm-tools
 if [ "$CUR_VIRTUAL_STATUS" == "Yes" ];
 then 
     if [ -e /usr/bin/vmware-toolbox-cmd ]; then
@@ -2064,9 +2065,14 @@ then
         echo "    ==>VMWare Tools Installed. OK"
         echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`		
     else
-        echo "VMWare Guest Tools not detected."
-        echo "    ==>Automatic check failed!"
-        echo -e "\t\t\t${RED}Failed${NONE}" > `tty`		
+		if [ -e /usr/bin/open-vm-tools ]; then
+			echo "VMWare Open VM Tools version `open-vm-tools -v` installed."
+			echo "    ==>VMWare Tools Installed. OK"
+			echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`	
+		else
+			echo "VMWare Guest Tools not detected."
+			echo "    ==>Automatic check failed!"
+			echo -e "\t\t\t${RED}Failed${NONE}" > `tty`		
     fi
 else
     echo "    ==>Not a virtual machine. OK"
