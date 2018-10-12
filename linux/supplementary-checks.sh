@@ -54,7 +54,7 @@ ENV_ORIGIN_FOLDER=`pwd`
 DD_PARAM_FLUSHED="bs=8k count=100k conv=fdatasync"
 DD_PARAM_CACHED="bs=8k count=100k"
 DD_OUTFILE="/tmp/output.img"
-# (30 Sep 2018 - (RayD) Bump to next minor version (3.3.0)
+# (30 Sep 2018 - RayD) Bump to next minor version (3.3.0)
 SCRIPT_VERSION="3.3.0"
 
 CFG_OUTPUT_FOLDER="~${ENV_REAL_USER}"
@@ -155,13 +155,20 @@ if [ "$TRELLIS_NEW_INSTALL" == "false" ]; then
     else
       TRELLIS_NEW_INSTALL="Yes"
 	  echo "Performing pre-check for new installation..."	  
-# (30 Sep 2018 - (RayD) Update comment when indicating this a new install when traces of Trellis are found
+# (30 Sep 2018 - RayD) Update comment when indicating this a new install when traces of Trellis are found
 	  echo "WARNING: Powertools should be run if this is new install on a server where Trellis already exists"
     fi	
 else
     echo "Performing pre-check for new installation..."	
 fi
 ######
+
+# (09 Oct 2018 - RayID) Move RELEASE calculation here so that RELEASE_VERSION can be determined before now.  If can't be resolved, treat as 6.5'
+RELEASE=`cat /etc/redhat-release | awk '{print $7}'`
+RELEASE_VERSION="$RELEASE" | cut -f1 -d"."
+if [ -z "$RELEASE_VERSION" ]; then
+	RELEASE_VERSION="6"
+fi
 
 #
 #  Find out if the server being installed is the front or back
@@ -185,7 +192,7 @@ while read TRELLIS_HOST_PROMPT; do
      fi
 done
 
-IP_COUNT=`ifconfig | grep "inet addr:" | grep -v "127.0.0.1" | wc -l`
+IP_COUNT=`ifconfig | grep "inet " | grep -v "127.0.0.1" | wc -l`
 
 #
 #  Get the IP and hostname of the server not being installed
@@ -194,8 +201,13 @@ if [ $TRELLIS_HOST_PROMPT = b ]; then
 
   BACK_HOST=`hostname -f`
   BACK_HOST_SHORT=`hostname -s`
+  # (Oct 09 2018 - RayD) ifconfig format changed in 7.x
   if [ $IP_COUNT == 1 ]; then
-    TRELLIS_BACK_IP=`ifconfig | grep "inet addr" | grep -v 127.0.0.1 | awk  -F: '{ print $2 }' | awk '{ print $1 }'`
+	if [ $RELEASE_VERSION = "7" ]; then
+		TRELLIS_BACK_IP=`ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{ print $2 }'`
+	else
+		TRELLIS_BACK_IP=`ifconfig | grep "inet " | grep -v 127.0.0.1 | awk  -F: '{ print $2 }' | awk '{ print $1 }'`
+	fi
   else
 	TRELLIS_BACK_IP="0.0.0.0"
   fi
@@ -558,14 +570,11 @@ echo
 echo '********************************************************************************'
 echo '********************** HDD Space / Capacity Summary ****************************'
 echo '********************************************************************************'
-echo 'Verify that server has 300GB Space or the following:'
-echo ' - /home/oracle = 20GB'
-echo ' - /tmp = 10GB'
-echo ' - /u01 = 100GB'
-echo ' - /u02 = 100GB'
-echo ' - /u03 = 30GB'
-echo ' - /u05 = 30GB'
-echo ' - / = 10GB'
+echo 'Verify that server has at least 50GB available space and 9.9GB of /tmp available space, or the following:'
+echo ' - /tmp = 10GB free'
+echo ' - /u01 = 22.5GB free'
+echo ' - /u02 = 22.5GB free'
+echo ' - / = 5GB free'
 echo
 df -h
 echo -e '########################################################################################\n'
@@ -575,7 +584,7 @@ echo -e '#######################################################################
 ###############################################################################
 echo -e '########################################################################################\n\tLinux Checks\n########################################################################################'
 
-# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck, but keep the setting of the RELEASE variable
+# (19 Sep 2018 - RayD) Test removed to avoid conflict with Engineering Precheck, but keep the setting of the RELEASE variable
 ##
 ##  REQ 1.1 - Operating System is the correct version
 ##
@@ -585,7 +594,7 @@ echo -e '#######################################################################
 #cat /etc/redhat-release
 #uname -m
 #echo
-RELEASE=`cat /etc/redhat-release | awk '{print $7}'`
+#RELEASE=`cat /etc/redhat-release | awk '{print $7}'`
 #
 #if [ "$RELEASE" == 6.4 -o "$RELEASE" == 6.5 -o "$RELEASE" == 6.6 ]; then
 #    echo "    ==>RH Release is $RELEASE. OK."
@@ -603,10 +612,9 @@ RELEASE=`cat /etc/redhat-release | awk '{print $7}'`
 #
 # Operating System Specifical Variables
 #
-# (9 Oct 2018 - (RayD) Add TIMEZONE_CMD to each OS for use in test 2.4
+# (9 Oct 2018 - RayD) Add TIMEZONE_CMD to each OS for use in test 5.8.  
 if [ "$RELEASE" == "5.9" ]; then
   IPTABLES_RESULT="Firewall is stopped."
-  IP6TABLES_RESULT=""
   REQ_1_59_PACKAGES="kexec-tools fipscheck device-mapper-multipath sgpio emacs libsane-hpaio xorg-x11-utils xorg-x11-server-Xnest binutils compat-db compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel gcc gcc-c++ glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel make openmotif screen sysstat unixODBC unixODBC-devel glibc-devel.i386 java-1.6.0-openjdk"
   ENTROPY="rngd -r /dev/urandom -t 2"
   ENTROPY_EXTRAOPTIONS="-r /dev/urandom -b"
@@ -614,7 +622,6 @@ if [ "$RELEASE" == "5.9" ]; then
   TIMEZONE_CMD="cat /etc/sysconfig/clock | grep ZONE | cut -f2 -d '=' | sed 's/[\"]//g'"
 elif [ "$RELEASE" == "6.3" ]; then
   IPTABLES_RESULT="iptables: Firewall is not running."
-  IP6TABLES_RESULT=""
   REQ_1_59_PACKAGES="binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl.i686 redhat-lsb redhat-lsb.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk"
   ENTROPY="rngd -r /dev/urandom -o /dev/random -t 0.01"
   ENTROPY_EXTRAOPTIONS="-i -r /dev/urandom -o /dev/random -b"
@@ -622,7 +629,6 @@ elif [ "$RELEASE" == "6.3" ]; then
   TIMEZONE_CMD="cat /etc/sysconfig/clock | grep ZONE | cut -f2 -d '=' | sed 's/[\"]//g'"
 elif [ "$RELEASE" == "6.4" ]; then
   IPTABLES_RESULT="iptables: Firewall is not running."
-  IP6TABLES_RESULT=""
   REQ_1_59_PACKAGES="zlib zlib.i686 binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl.i686 redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk java-1.7.0-openjdk"
   ENTROPY="rngd -r /dev/urandom -o /dev/random -t 0.01"
   ENTROPY_EXTRAOPTIONS="-i -r /dev/urandom -o /dev/random -b"  
@@ -630,37 +636,34 @@ elif [ "$RELEASE" == "6.4" ]; then
   TIMEZONE_CMD="cat /etc/sysconfig/clock | grep ZONE | cut -f2 -d '=' | sed 's/[\"]//g'"
 elif [ "$RELEASE" == "6.5" ] || [ "$RELEASE" == "6.6" ] || [ "$RELEASE" == "6.7" ] || [ "$RELEASE" == "6.8" ] || [ "$RELEASE" == "6.9" ] ; then
   IPTABLES_RESULT="iptables: Firewall is not running."
-  IP6TABLES_RESULT=""
   REQ_1_59_PACKAGES="zlib zlib.i686 binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl openssl.i686 redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk java-1.7.0-openjdk"
   ENTROPY="rngd -r /dev/urandom -o /dev/random -t 0.01"
   ENTROPY_EXTRAOPTIONS=" -r /dev/urandom -o /dev/random -b"  
   TIMEZONE_LIST="Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmara Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Africa/Brazzaville Africa/Bujumbura Africa/Cairo Africa/Casablanca Africa/Ceuta Africa/Conakry Africa/Dakar Africa/Dar_es_Salaam Africa/Djibouti Africa/Douala Africa/El_Aaiun Africa/Freetown Africa/Gaborone Africa/Harare Africa/Johannesburg Africa/Kampala Africa/Khartoum Africa/Kigali Africa/Kinshasa Africa/Lagos Africa/Libreville Africa/Lome Africa/Luanda Africa/Lubumbashi Africa/Lusaka Africa/Malabo Africa/Maputo Africa/Maseru Africa/Mbabane Africa/Mogadishu Africa/Monrovia Africa/Nairobi Africa/Ndjamena Africa/Niamey Africa/Nouakchott Africa/Ouagadougou Africa/Porto-Novo Africa/Sao_Tome Africa/Timbuktu Africa/Tripoli Africa/Tunis Africa/Windhoek America/Adak America/Anchorage America/Anguilla America/Antigua America/Araguaina America/Argentina/Buenos_Aires America/Argentina/Catamarca America/Argentina/ComodRivadavia America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/La_Rioja America/Argentina/Mendoza America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Aruba America/Asuncion America/Atikokan America/Atka America/Bahia America/Barbados America/Belem America/Belize America/Blanc-Sablon America/Boa_Vista America/Bogota America/Boise America/Buenos_Aires America/Cambridge_Bay America/Campo_Grande America/Cancun America/Caracas America/Catamarca America/Cayenne America/Cayman America/Chicago America/Chihuahua America/Coral_Harbour America/Cordoba America/Costa_Rica America/Cuiaba America/Curacao America/Danmarkshavn America/Dawson America/Dawson_Creek America/Denver America/Detroit America/Dominica America/Edmonton America/Eirunepe America/El_Salvador America/Ensenada America/Fort_Wayne America/Fortaleza America/Glace_Bay America/Godthab America/Goose_Bay America/Grand_Turk America/Grenada America/Guadeloupe America/Guatemala America/Guayaquil America/Guyana America/Halifax America/Havana America/Hermosillo America/Indiana/Indianapolis America/Indiana/Knox America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Tell_City America/Indiana/Vevay America/Indiana/Vincennes America/Indiana/Winamac America/Indianapolis America/Inuvik America/Iqaluit America/Jamaica America/Jujuy America/Juneau America/Kentucky/Louisville America/Kentucky/Monticello America/Knox_IN America/La_Paz America/Lima America/Los_Angeles America/Louisville America/Maceio America/Managua America/Manaus America/Marigot America/Martinique America/Mazatlan America/Mendoza America/Menominee America/Merida America/Mexico_City America/Miquelon America/Moncton America/Monterrey America/Montevideo America/Montreal America/Montserrat America/Nassau America/New_York America/Nipigon America/Nome America/Noronha America/North_Dakota/Center America/North_Dakota/New_Salem America/Panama America/Pangnirtung America/Paramaribo America/Phoenix America/Port_of_Spain America/Port-au-Prince America/Porto_Acre America/Porto_Velho America/Puerto_Rico America/Rainy_River America/Rankin_Inlet America/Recife America/Regina America/Resolute America/Rio_Branco America/Rosario America/Santiago America/Santo_Domingo America/Sao_Paulo America/Scoresbysund America/Shiprock America/St_Barthelemy America/St_Johns America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Swift_Current America/Tegucigalpa America/Thule America/Thunder_Bay America/Tijuana America/Toronto America/Tortola America/Vancouver America/Virgin America/Whitehorse America/Winnipeg America/Yakutat America/Yellowknife Antarctica/Casey Antarctica/Davis Antarctica/DumontDUrville Antarctica/Mawson Antarctica/McMurdo Antarctica/Palmer Antarctica/South_Pole Antarctica/Syowa Arctic/Longyearbyen Asia/Aden Asia/Almaty Asia/Amman Asia/Anadyr Asia/Aqtau Asia/Aqtobe Asia/Ashgabat Asia/Ashkhabad Asia/Baghdad Asia/Bahrain Asia/Baku Asia/Bangkok Asia/Beirut Asia/Bishkek Asia/Brunei Asia/Calcutta Asia/Choibalsan Asia/Chongqing Asia/Chungking Asia/Colombo Asia/Dacca Asia/Damascus Asia/Dhaka Asia/Dili Asia/Dubai Asia/Dushanbe Asia/Gaza Asia/Harbin Asia/Ho_Chi_Minh Asia/Hong_Kong Asia/Hovd Asia/Irkutsk Asia/Istanbul Asia/Jakarta Asia/Jayapura Asia/Jerusalem Asia/Kabul Asia/Kamchatka Asia/Karachi Asia/Kashgar Asia/Kathmandu Asia/Katmandu Asia/Kolkata Asia/Krasnoyarsk Asia/Kuala_Lumpur Asia/Kuching Asia/Kuwait Asia/Macao Asia/Macau Asia/Magadan Asia/Makassar Asia/Manila Asia/Muscat Asia/Nicosia Asia/Novosibirsk Asia/Omsk Asia/Oral Asia/Phnom_Penh Asia/Pontianak Asia/Pyongyang Asia/Qatar Asia/Qyzylorda Asia/Rangoon Asia/Riyadh Asia/Saigon Asia/Sakhalin Asia/Samarkand Asia/Seoul Asia/Shanghai Asia/Singapore Asia/Taipei Asia/Tashkent Asia/Tbilisi Asia/Tehran Asia/Tel_Aviv Asia/Thimbu Asia/Thimphu Asia/Tokyo Asia/Ujung_Pandang Asia/Ulaanbaatar Asia/Ulan_Bator Asia/Urumqi Asia/Vientiane Asia/Vladivostok Asia/Yakutsk Asia/Yekaterinburg Asia/Yerevan Atlantic/Azores Atlantic/Bermuda Atlantic/Canary Atlantic/Cape_Verde Atlantic/Faeroe Atlantic/Faroe Atlantic/Jan_Mayen Atlantic/Madeira Atlantic/Reykjavik Atlantic/South_Georgia Atlantic/St_Helena Atlantic/Stanley Australia/ACT Australia/Adelaide Australia/Brisbane Australia/Broken_Hill Australia/Canberra Australia/Currie Australia/Darwin Australia/Eucla Australia/Hobart Australia/LHI Australia/Lindeman Australia/Lord_Howe Australia/Melbourne Australia/North Australia/NSW Australia/Perth Australia/Queensland Australia/South Australia/Sydney Australia/Tasmania Australia/Victoria Australia/West Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West Canada/Atlantic Canada/Central Canada/Eastern Canada/East-Saskatchewan Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Saskatchewan Canada/Yukon CET Chile/Continental Chile/EasterIsland CST CST6CDT Cuba EET Egypt Eire EST EST5EDT Etc/GMT Etc/GMT+0 Etc/GMT+1 Etc/GMT+10 Etc/GMT+11 Etc/GMT+12 Etc/GMT+2 Etc/GMT+3 Etc/GMT+4 Etc/GMT+5 Etc/GMT+6 Etc/GMT+7 Etc/GMT+8 Etc/GMT+9 Etc/GMT0 Etc/GMT-0 Etc/GMT-1 Etc/GMT-10 Etc/GMT-11 Etc/GMT-12 Etc/GMT-13 Etc/GMT-14 Etc/GMT-2 Etc/GMT-3 Etc/GMT-4 Etc/GMT-5 Etc/GMT-6 Etc/GMT-7 Etc/GMT-8 Etc/GMT-9 Etc/Greenwich Europe/Amsterdam Europe/Andorra Europe/Athens Europe/Belfast Europe/Belgrade Europe/Berlin Europe/Bratislava Europe/Brussels Europe/Bucharest Europe/Budapest Europe/Chisinau Europe/Copenhagen Europe/Dublin Europe/Gibraltar Europe/Guernsey Europe/Helsinki Europe/Isle_of_Man Europe/Istanbul Europe/Jersey Europe/Kaliningrad Europe/Kiev Europe/Lisbon Europe/Ljubljana Europe/London Europe/Luxembourg Europe/Madrid Europe/Malta Europe/Mariehamn Europe/Minsk Europe/Monaco Europe/Moscow Europe/Nicosia Europe/Oslo Europe/Paris Europe/Prague Europe/Riga Europe/Rome Europe/Samara Europe/San_Marino Europe/Sarajevo Europe/Simferopol Europe/Skopje Europe/Sofia Europe/Stockholm Europe/Tallinn Europe/Tirane Europe/Tiraspol Europe/Uzhgorod Europe/Vaduz Europe/Vatican Europe/Vienna Europe/Vilnius Europe/Volgograd Europe/Warsaw Europe/Zagreb Europe/Zaporozhye Europe/Zurich GB GB-Eire GMT GMT+0 GMT0 GMT-0 Greenwich Hongkong HST Iceland Indian/Antananarivo Indian/Chagos Indian/Christmas Indian/Cocos Indian/Comoro Indian/Kerguelen Indian/Mahe Indian/Maldives Indian/Mauritius Indian/Mayotte Indian/Reunion Iran Israel Jamaica Japan Kwajalein Libya MET Mexico/BajaNorte Mexico/BajaSur Mexico/General MST MST7MDT Navajo NZ NZ-CHAT Pacific/Apia Pacific/Auckland Pacific/Chatham Pacific/Easter Pacific/Efate Pacific/Enderbury Pacific/Fakaofo Pacific/Fiji Pacific/Funafuti Pacific/Galapagos Pacific/Gambier Pacific/Guadalcanal Pacific/Guam Pacific/Honolulu Pacific/Johnston Pacific/Kiritimati Pacific/Kosrae Pacific/Kwajalein Pacific/Majuro Pacific/Marquesas Pacific/Midway Pacific/Nauru Pacific/Niue Pacific/Norfolk Pacific/Noumea Pacific/Pago_Pago Pacific/Palau Pacific/Pitcairn Pacific/Ponape Pacific/Port_Moresby Pacific/Rarotonga Pacific/Saipan Pacific/Samoa Pacific/Tahiti Pacific/Tarawa Pacific/Tongatapu Pacific/Truk Pacific/Wake Pacific/Wallis Pacific/Yap Poland Portugal PRC PST PST8PDT ROC ROK Singapore Turkey US/Alaska US/Aleutian US/Arizona US/Central US/Eastern US/East-Indiana US/Hawaii US/Indiana-Starke US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa UTC WET W-SU"
   TIMEZONE_CMD="cat /etc/sysconfig/clock | grep ZONE | cut -f2 -d '=' | sed 's/[\"]//g'"
-# (30 Sep 2018 - (RayD) Updated the list of packages
+# (30 Sep 2018 - RayD) Updated the list of packages
   elif [ "$RELEASE" == "7.3" ] || [ "$RELEASE" == "7.4" ]; then
   # TODO: #STB-6
   IPTABLES_RESULT="iptables: Firewall is not running."
   # TODO: #STB-4
-  IP6TABLES_RESULT="ip6tables: Firewall is not running."
   REQ_1_59_PACKAGES="zlib zlib.i686 binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts iptraf kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 make mtools nmap openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio strace sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-xll-server-utils xorg-x11-utils"
   ENTROPY="rngd -r /dev/urandom -o /dev/random -t 0.01"
   ENTROPY_EXTRAOPTIONS=" -r /dev/urandom -o /dev/random -b"  
   TIMEZONE_LIST="Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmara Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Africa/Brazzaville Africa/Bujumbura Africa/Cairo Africa/Casablanca Africa/Ceuta Africa/Conakry Africa/Dakar Africa/Dar_es_Salaam Africa/Djibouti Africa/Douala Africa/El_Aaiun Africa/Freetown Africa/Gaborone Africa/Harare Africa/Johannesburg Africa/Kampala Africa/Khartoum Africa/Kigali Africa/Kinshasa Africa/Lagos Africa/Libreville Africa/Lome Africa/Luanda Africa/Lubumbashi Africa/Lusaka Africa/Malabo Africa/Maputo Africa/Maseru Africa/Mbabane Africa/Mogadishu Africa/Monrovia Africa/Nairobi Africa/Ndjamena Africa/Niamey Africa/Nouakchott Africa/Ouagadougou Africa/Porto-Novo Africa/Sao_Tome Africa/Timbuktu Africa/Tripoli Africa/Tunis Africa/Windhoek America/Adak America/Anchorage America/Anguilla America/Antigua America/Araguaina America/Argentina/Buenos_Aires America/Argentina/Catamarca America/Argentina/ComodRivadavia America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/La_Rioja America/Argentina/Mendoza America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Aruba America/Asuncion America/Atikokan America/Atka America/Bahia America/Barbados America/Belem America/Belize America/Blanc-Sablon America/Boa_Vista America/Bogota America/Boise America/Buenos_Aires America/Cambridge_Bay America/Campo_Grande America/Cancun America/Caracas America/Catamarca America/Cayenne America/Cayman America/Chicago America/Chihuahua America/Coral_Harbour America/Cordoba America/Costa_Rica America/Cuiaba America/Curacao America/Danmarkshavn America/Dawson America/Dawson_Creek America/Denver America/Detroit America/Dominica America/Edmonton America/Eirunepe America/El_Salvador America/Ensenada America/Fort_Wayne America/Fortaleza America/Glace_Bay America/Godthab America/Goose_Bay America/Grand_Turk America/Grenada America/Guadeloupe America/Guatemala America/Guayaquil America/Guyana America/Halifax America/Havana America/Hermosillo America/Indiana/Indianapolis America/Indiana/Knox America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Tell_City America/Indiana/Vevay America/Indiana/Vincennes America/Indiana/Winamac America/Indianapolis America/Inuvik America/Iqaluit America/Jamaica America/Jujuy America/Juneau America/Kentucky/Louisville America/Kentucky/Monticello America/Knox_IN America/La_Paz America/Lima America/Los_Angeles America/Louisville America/Maceio America/Managua America/Manaus America/Marigot America/Martinique America/Mazatlan America/Mendoza America/Menominee America/Merida America/Mexico_City America/Miquelon America/Moncton America/Monterrey America/Montevideo America/Montreal America/Montserrat America/Nassau America/New_York America/Nipigon America/Nome America/Noronha America/North_Dakota/Center America/North_Dakota/New_Salem America/Panama America/Pangnirtung America/Paramaribo America/Phoenix America/Port_of_Spain America/Port-au-Prince America/Porto_Acre America/Porto_Velho America/Puerto_Rico America/Rainy_River America/Rankin_Inlet America/Recife America/Regina America/Resolute America/Rio_Branco America/Rosario America/Santiago America/Santo_Domingo America/Sao_Paulo America/Scoresbysund America/Shiprock America/St_Barthelemy America/St_Johns America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Swift_Current America/Tegucigalpa America/Thule America/Thunder_Bay America/Tijuana America/Toronto America/Tortola America/Vancouver America/Virgin America/Whitehorse America/Winnipeg America/Yakutat America/Yellowknife Antarctica/Casey Antarctica/Davis Antarctica/DumontDUrville Antarctica/Mawson Antarctica/McMurdo Antarctica/Palmer Antarctica/South_Pole Antarctica/Syowa Arctic/Longyearbyen Asia/Aden Asia/Almaty Asia/Amman Asia/Anadyr Asia/Aqtau Asia/Aqtobe Asia/Ashgabat Asia/Ashkhabad Asia/Baghdad Asia/Bahrain Asia/Baku Asia/Bangkok Asia/Beirut Asia/Bishkek Asia/Brunei Asia/Calcutta Asia/Choibalsan Asia/Chongqing Asia/Chungking Asia/Colombo Asia/Dacca Asia/Damascus Asia/Dhaka Asia/Dili Asia/Dubai Asia/Dushanbe Asia/Gaza Asia/Harbin Asia/Ho_Chi_Minh Asia/Hong_Kong Asia/Hovd Asia/Irkutsk Asia/Istanbul Asia/Jakarta Asia/Jayapura Asia/Jerusalem Asia/Kabul Asia/Kamchatka Asia/Karachi Asia/Kashgar Asia/Kathmandu Asia/Katmandu Asia/Kolkata Asia/Krasnoyarsk Asia/Kuala_Lumpur Asia/Kuching Asia/Kuwait Asia/Macao Asia/Macau Asia/Magadan Asia/Makassar Asia/Manila Asia/Muscat Asia/Nicosia Asia/Novosibirsk Asia/Omsk Asia/Oral Asia/Phnom_Penh Asia/Pontianak Asia/Pyongyang Asia/Qatar Asia/Qyzylorda Asia/Rangoon Asia/Riyadh Asia/Saigon Asia/Sakhalin Asia/Samarkand Asia/Seoul Asia/Shanghai Asia/Singapore Asia/Taipei Asia/Tashkent Asia/Tbilisi Asia/Tehran Asia/Tel_Aviv Asia/Thimbu Asia/Thimphu Asia/Tokyo Asia/Ujung_Pandang Asia/Ulaanbaatar Asia/Ulan_Bator Asia/Urumqi Asia/Vientiane Asia/Vladivostok Asia/Yakutsk Asia/Yekaterinburg Asia/Yerevan Atlantic/Azores Atlantic/Bermuda Atlantic/Canary Atlantic/Cape_Verde Atlantic/Faeroe Atlantic/Faroe Atlantic/Jan_Mayen Atlantic/Madeira Atlantic/Reykjavik Atlantic/South_Georgia Atlantic/St_Helena Atlantic/Stanley Australia/ACT Australia/Adelaide Australia/Brisbane Australia/Broken_Hill Australia/Canberra Australia/Currie Australia/Darwin Australia/Eucla Australia/Hobart Australia/LHI Australia/Lindeman Australia/Lord_Howe Australia/Melbourne Australia/North Australia/NSW Australia/Perth Australia/Queensland Australia/South Australia/Sydney Australia/Tasmania Australia/Victoria Australia/West Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West Canada/Atlantic Canada/Central Canada/Eastern Canada/East-Saskatchewan Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Saskatchewan Canada/Yukon CET Chile/Continental Chile/EasterIsland CST CST6CDT Cuba EET Egypt Eire EST EST5EDT Etc/GMT Etc/GMT+0 Etc/GMT+1 Etc/GMT+10 Etc/GMT+11 Etc/GMT+12 Etc/GMT+2 Etc/GMT+3 Etc/GMT+4 Etc/GMT+5 Etc/GMT+6 Etc/GMT+7 Etc/GMT+8 Etc/GMT+9 Etc/GMT0 Etc/GMT-0 Etc/GMT-1 Etc/GMT-10 Etc/GMT-11 Etc/GMT-12 Etc/GMT-13 Etc/GMT-14 Etc/GMT-2 Etc/GMT-3 Etc/GMT-4 Etc/GMT-5 Etc/GMT-6 Etc/GMT-7 Etc/GMT-8 Etc/GMT-9 Etc/Greenwich Europe/Amsterdam Europe/Andorra Europe/Athens Europe/Belfast Europe/Belgrade Europe/Berlin Europe/Bratislava Europe/Brussels Europe/Bucharest Europe/Budapest Europe/Chisinau Europe/Copenhagen Europe/Dublin Europe/Gibraltar Europe/Guernsey Europe/Helsinki Europe/Isle_of_Man Europe/Istanbul Europe/Jersey Europe/Kaliningrad Europe/Kiev Europe/Lisbon Europe/Ljubljana Europe/London Europe/Luxembourg Europe/Madrid Europe/Malta Europe/Mariehamn Europe/Minsk Europe/Monaco Europe/Moscow Europe/Nicosia Europe/Oslo Europe/Paris Europe/Prague Europe/Riga Europe/Rome Europe/Samara Europe/San_Marino Europe/Sarajevo Europe/Simferopol Europe/Skopje Europe/Sofia Europe/Stockholm Europe/Tallinn Europe/Tirane Europe/Tiraspol Europe/Uzhgorod Europe/Vaduz Europe/Vatican Europe/Vienna Europe/Vilnius Europe/Volgograd Europe/Warsaw Europe/Zagreb Europe/Zaporozhye Europe/Zurich GB GB-Eire GMT GMT+0 GMT0 GMT-0 Greenwich Hongkong HST Iceland Indian/Antananarivo Indian/Chagos Indian/Christmas Indian/Cocos Indian/Comoro Indian/Kerguelen Indian/Mahe Indian/Maldives Indian/Mauritius Indian/Mayotte Indian/Reunion Iran Israel Jamaica Japan Kwajalein Libya MET Mexico/BajaNorte Mexico/BajaSur Mexico/General MST MST7MDT Navajo NZ NZ-CHAT Pacific/Apia Pacific/Auckland Pacific/Chatham Pacific/Easter Pacific/Efate Pacific/Enderbury Pacific/Fakaofo Pacific/Fiji Pacific/Funafuti Pacific/Galapagos Pacific/Gambier Pacific/Guadalcanal Pacific/Guam Pacific/Honolulu Pacific/Johnston Pacific/Kiritimati Pacific/Kosrae Pacific/Kwajalein Pacific/Majuro Pacific/Marquesas Pacific/Midway Pacific/Nauru Pacific/Niue Pacific/Norfolk Pacific/Noumea Pacific/Pago_Pago Pacific/Palau Pacific/Pitcairn Pacific/Ponape Pacific/Port_Moresby Pacific/Rarotonga Pacific/Saipan Pacific/Samoa Pacific/Tahiti Pacific/Tarawa Pacific/Tongatapu Pacific/Truk Pacific/Wake Pacific/Wallis Pacific/Yap Poland Portugal PRC PST PST8PDT ROC ROK Singapore Turkey US/Alaska US/Aleutian US/Arizona US/Central US/Eastern US/East-Indiana US/Hawaii US/Indiana-Starke US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa UTC WET W-SU"
-  TIMEZONE_CMD="timedatectl | grep 'Time zone'"
+  TIMEZONE_CMD="timedatectl | grep 'Time zone' | awk '{print $3}'"
 else
-  echo '[Warning]: RHEL Version not matched, tests will be against 7.4.'
-  RELEASE="7.4"
+  echo '[Warning]: RHEL Version not matched, tests will be against 6.8.'
+  RELEASE="6.8"
   IPTABLES_RESULT="iptables: Firewall is not running."
-  IP6TABLES_RESULT="ip6tables: Firewall is not running."
-  REQ_1_59_PACKAGES="zlib zlib.i686 binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts iptraf kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 make mtools nmap openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio strace sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-xll-server-utils xorg-x11-utils"
+  REQ_1_59_PACKAGES="zlib zlib.i686 binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl openssl.i686 redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk java-1.7.0-openjdk"
   ENTROPY="rngd -r /dev/urandom -o /dev/random -t 0.01"
-  ENTROPY_EXTRAOPTIONS="-i -r /dev/urandom -o /dev/random -b"  
+  ENTROPY_EXTRAOPTIONS=" -r /dev/urandom -o /dev/random -b"  
   TIMEZONE_LIST="Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmara Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Africa/Brazzaville Africa/Bujumbura Africa/Cairo Africa/Casablanca Africa/Ceuta Africa/Conakry Africa/Dakar Africa/Dar_es_Salaam Africa/Djibouti Africa/Douala Africa/El_Aaiun Africa/Freetown Africa/Gaborone Africa/Harare Africa/Johannesburg Africa/Kampala Africa/Khartoum Africa/Kigali Africa/Kinshasa Africa/Lagos Africa/Libreville Africa/Lome Africa/Luanda Africa/Lubumbashi Africa/Lusaka Africa/Malabo Africa/Maputo Africa/Maseru Africa/Mbabane Africa/Mogadishu Africa/Monrovia Africa/Nairobi Africa/Ndjamena Africa/Niamey Africa/Nouakchott Africa/Ouagadougou Africa/Porto-Novo Africa/Sao_Tome Africa/Timbuktu Africa/Tripoli Africa/Tunis Africa/Windhoek America/Adak America/Anchorage America/Anguilla America/Antigua America/Araguaina America/Argentina/Buenos_Aires America/Argentina/Catamarca America/Argentina/ComodRivadavia America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/La_Rioja America/Argentina/Mendoza America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Aruba America/Asuncion America/Atikokan America/Atka America/Bahia America/Barbados America/Belem America/Belize America/Blanc-Sablon America/Boa_Vista America/Bogota America/Boise America/Buenos_Aires America/Cambridge_Bay America/Campo_Grande America/Cancun America/Caracas America/Catamarca America/Cayenne America/Cayman America/Chicago America/Chihuahua America/Coral_Harbour America/Cordoba America/Costa_Rica America/Cuiaba America/Curacao America/Danmarkshavn America/Dawson America/Dawson_Creek America/Denver America/Detroit America/Dominica America/Edmonton America/Eirunepe America/El_Salvador America/Ensenada America/Fort_Wayne America/Fortaleza America/Glace_Bay America/Godthab America/Goose_Bay America/Grand_Turk America/Grenada America/Guadeloupe America/Guatemala America/Guayaquil America/Guyana America/Halifax America/Havana America/Hermosillo America/Indiana/Indianapolis America/Indiana/Knox America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Tell_City America/Indiana/Vevay America/Indiana/Vincennes America/Indiana/Winamac America/Indianapolis America/Inuvik America/Iqaluit America/Jamaica America/Jujuy America/Juneau America/Kentucky/Louisville America/Kentucky/Monticello America/Knox_IN America/La_Paz America/Lima America/Los_Angeles America/Louisville America/Maceio America/Managua America/Manaus America/Marigot America/Martinique America/Mazatlan America/Mendoza America/Menominee America/Merida America/Mexico_City America/Miquelon America/Moncton America/Monterrey America/Montevideo America/Montreal America/Montserrat America/Nassau America/New_York America/Nipigon America/Nome America/Noronha America/North_Dakota/Center America/North_Dakota/New_Salem America/Panama America/Pangnirtung America/Paramaribo America/Phoenix America/Port_of_Spain America/Port-au-Prince America/Porto_Acre America/Porto_Velho America/Puerto_Rico America/Rainy_River America/Rankin_Inlet America/Recife America/Regina America/Resolute America/Rio_Branco America/Rosario America/Santiago America/Santo_Domingo America/Sao_Paulo America/Scoresbysund America/Shiprock America/St_Barthelemy America/St_Johns America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Swift_Current America/Tegucigalpa America/Thule America/Thunder_Bay America/Tijuana America/Toronto America/Tortola America/Vancouver America/Virgin America/Whitehorse America/Winnipeg America/Yakutat America/Yellowknife Antarctica/Casey Antarctica/Davis Antarctica/DumontDUrville Antarctica/Mawson Antarctica/McMurdo Antarctica/Palmer Antarctica/South_Pole Antarctica/Syowa Arctic/Longyearbyen Asia/Aden Asia/Almaty Asia/Amman Asia/Anadyr Asia/Aqtau Asia/Aqtobe Asia/Ashgabat Asia/Ashkhabad Asia/Baghdad Asia/Bahrain Asia/Baku Asia/Bangkok Asia/Beirut Asia/Bishkek Asia/Brunei Asia/Calcutta Asia/Choibalsan Asia/Chongqing Asia/Chungking Asia/Colombo Asia/Dacca Asia/Damascus Asia/Dhaka Asia/Dili Asia/Dubai Asia/Dushanbe Asia/Gaza Asia/Harbin Asia/Ho_Chi_Minh Asia/Hong_Kong Asia/Hovd Asia/Irkutsk Asia/Istanbul Asia/Jakarta Asia/Jayapura Asia/Jerusalem Asia/Kabul Asia/Kamchatka Asia/Karachi Asia/Kashgar Asia/Kathmandu Asia/Katmandu Asia/Kolkata Asia/Krasnoyarsk Asia/Kuala_Lumpur Asia/Kuching Asia/Kuwait Asia/Macao Asia/Macau Asia/Magadan Asia/Makassar Asia/Manila Asia/Muscat Asia/Nicosia Asia/Novosibirsk Asia/Omsk Asia/Oral Asia/Phnom_Penh Asia/Pontianak Asia/Pyongyang Asia/Qatar Asia/Qyzylorda Asia/Rangoon Asia/Riyadh Asia/Saigon Asia/Sakhalin Asia/Samarkand Asia/Seoul Asia/Shanghai Asia/Singapore Asia/Taipei Asia/Tashkent Asia/Tbilisi Asia/Tehran Asia/Tel_Aviv Asia/Thimbu Asia/Thimphu Asia/Tokyo Asia/Ujung_Pandang Asia/Ulaanbaatar Asia/Ulan_Bator Asia/Urumqi Asia/Vientiane Asia/Vladivostok Asia/Yakutsk Asia/Yekaterinburg Asia/Yerevan Atlantic/Azores Atlantic/Bermuda Atlantic/Canary Atlantic/Cape_Verde Atlantic/Faeroe Atlantic/Faroe Atlantic/Jan_Mayen Atlantic/Madeira Atlantic/Reykjavik Atlantic/South_Georgia Atlantic/St_Helena Atlantic/Stanley Australia/ACT Australia/Adelaide Australia/Brisbane Australia/Broken_Hill Australia/Canberra Australia/Currie Australia/Darwin Australia/Eucla Australia/Hobart Australia/LHI Australia/Lindeman Australia/Lord_Howe Australia/Melbourne Australia/North Australia/NSW Australia/Perth Australia/Queensland Australia/South Australia/Sydney Australia/Tasmania Australia/Victoria Australia/West Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West Canada/Atlantic Canada/Central Canada/Eastern Canada/East-Saskatchewan Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Saskatchewan Canada/Yukon CET Chile/Continental Chile/EasterIsland CST CST6CDT Cuba EET Egypt Eire EST EST5EDT Etc/GMT Etc/GMT+0 Etc/GMT+1 Etc/GMT+10 Etc/GMT+11 Etc/GMT+12 Etc/GMT+2 Etc/GMT+3 Etc/GMT+4 Etc/GMT+5 Etc/GMT+6 Etc/GMT+7 Etc/GMT+8 Etc/GMT+9 Etc/GMT0 Etc/GMT-0 Etc/GMT-1 Etc/GMT-10 Etc/GMT-11 Etc/GMT-12 Etc/GMT-13 Etc/GMT-14 Etc/GMT-2 Etc/GMT-3 Etc/GMT-4 Etc/GMT-5 Etc/GMT-6 Etc/GMT-7 Etc/GMT-8 Etc/GMT-9 Etc/Greenwich Europe/Amsterdam Europe/Andorra Europe/Athens Europe/Belfast Europe/Belgrade Europe/Berlin Europe/Bratislava Europe/Brussels Europe/Bucharest Europe/Budapest Europe/Chisinau Europe/Copenhagen Europe/Dublin Europe/Gibraltar Europe/Guernsey Europe/Helsinki Europe/Isle_of_Man Europe/Istanbul Europe/Jersey Europe/Kaliningrad Europe/Kiev Europe/Lisbon Europe/Ljubljana Europe/London Europe/Luxembourg Europe/Madrid Europe/Malta Europe/Mariehamn Europe/Minsk Europe/Monaco Europe/Moscow Europe/Nicosia Europe/Oslo Europe/Paris Europe/Prague Europe/Riga Europe/Rome Europe/Samara Europe/San_Marino Europe/Sarajevo Europe/Simferopol Europe/Skopje Europe/Sofia Europe/Stockholm Europe/Tallinn Europe/Tirane Europe/Tiraspol Europe/Uzhgorod Europe/Vaduz Europe/Vatican Europe/Vienna Europe/Vilnius Europe/Volgograd Europe/Warsaw Europe/Zagreb Europe/Zaporozhye Europe/Zurich GB GB-Eire GMT GMT+0 GMT0 GMT-0 Greenwich Hongkong HST Iceland Indian/Antananarivo Indian/Chagos Indian/Christmas Indian/Cocos Indian/Comoro Indian/Kerguelen Indian/Mahe Indian/Maldives Indian/Mauritius Indian/Mayotte Indian/Reunion Iran Israel Jamaica Japan Kwajalein Libya MET Mexico/BajaNorte Mexico/BajaSur Mexico/General MST MST7MDT Navajo NZ NZ-CHAT Pacific/Apia Pacific/Auckland Pacific/Chatham Pacific/Easter Pacific/Efate Pacific/Enderbury Pacific/Fakaofo Pacific/Fiji Pacific/Funafuti Pacific/Galapagos Pacific/Gambier Pacific/Guadalcanal Pacific/Guam Pacific/Honolulu Pacific/Johnston Pacific/Kiritimati Pacific/Kosrae Pacific/Kwajalein Pacific/Majuro Pacific/Marquesas Pacific/Midway Pacific/Nauru Pacific/Niue Pacific/Norfolk Pacific/Noumea Pacific/Pago_Pago Pacific/Palau Pacific/Pitcairn Pacific/Ponape Pacific/Port_Moresby Pacific/Rarotonga Pacific/Saipan Pacific/Samoa Pacific/Tahiti Pacific/Tarawa Pacific/Tongatapu Pacific/Truk Pacific/Wake Pacific/Wallis Pacific/Yap Poland Portugal PRC PST PST8PDT ROC ROK Singapore Turkey US/Alaska US/Aleutian US/Arizona US/Central US/Eastern US/East-Indiana US/Hawaii US/Indiana-Starke US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa UTC WET W-SU"
-  TIMEZONE_CMD="timedatectl | grep 'Time zone'"
+  TIMEZONE_CMD="cat /etc/sysconfig/clock | grep ZONE | cut -f2 -d '=' | sed 's/[\"]//g'"
 fi
 #####
 
-# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+# (19 Sep 2018 - RayD) Test removed to avoid conflict with Engineering Precheck
 ##
 ##  REQ 1.2 - The “Trellis Directory Permissions” are configured correctly
 ##
@@ -749,6 +752,7 @@ fi
 
 echo '****************************************************************************'
 echo '****************************************************************************'
+echo 
 #####
 
 #
@@ -805,7 +809,7 @@ echo '*********************Trellis Environment Variables******************'
 echo '**************The output should contain the below 3 lines***********'
 echo '***********************PATH should contain /sbin/ ******************'
 echo '***********************MW_HOME=/u01/fm/11.1.0.7/********************'
-echo '***************ORACLE_HOME=/u01/app/oracle/product/12.1.0.2***********'
+echo '***************ORACLE_HOME=/u01/app/oracle/product/12.1.0.2*********'
 echo '***************************ORACLE_SID=orcl**************************'
 echo
 su - oracle -c 'echo PATH=${PATH}'
@@ -839,7 +843,7 @@ fi
 
 echo "Checking oracle user environment variables: ORACLE_HOME..."
 ORA_ORACLE_HOME=`su - oracle -c 'echo ${ORACLE_HOME}'`
-# (9-27-18 RayD) Change ORACLE_HOME path from 11.2.0 to 12.1.0.2
+# (27 Sep 2018 - RayD) Change ORACLE_HOME path from 11.2.0 to 12.1.0.2
 if [ "$ORA_ORACLE_HOME"  == "/u01/app/oracle/product/12.1.0.2" ]
 then
     echo "    Oracle env ORACLE_HOME is configured correctly. OK."
@@ -914,8 +918,8 @@ else
     echo "    ==>Automatic check failed!"
     echo -e "\t\t\t${RED}Failed${NONE}" > `tty`
 fi
-echo '****************************************************************************'
-echo '****************************************************************************'
+echo '********************************************************************'
+echo '********************************************************************'
 #####
 
 #
@@ -959,7 +963,7 @@ echo '**************************************************************************
 echo '****************************************************************************'
 #####
 
-# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+# (27 Sep 2018 - RayD) Test removed to avoid conflict with Engineering Precheck
 ##
 ##  REQ 1.56 - Confirm Network Manager Disabled
 ##
@@ -985,7 +989,7 @@ echo '**************************************************************************
 #fi
 ######
 
-# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+# (19 Sep 2018 - RayD) Test removed to avoid conflict with Engineering Precheck
 ##
 ##  REQ 1.57 - The nodemanager content and permissions are configured correctly
 ##
@@ -1015,7 +1019,7 @@ echo '**************************************************************************
 #echo '****************************************************************************'
 #####
 
-# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+# (19 Sep 2018 - RayD) Test removed to avoid conflict with Engineering Precheck
 ##
 ##  REQ 1.58 - The Sudoers Content is configured correctly
 ##
@@ -1168,7 +1172,7 @@ echo '*** ant which is packages with the Trellis installer ***************'
 echo -n "[REQ 1.60]  Checking for ANT package..." > `tty`
 echo "[REQ 1.60]  Checking for ANT package..." 
 CMD_RPM_SEARCH=`rpm -q apache-ant`
-# (9-27-18 RayD) Changed string in test from ant to apache-ant
+# (19 Sep 2018 - RayD) Changed string in test from ant to apache-ant
 if [ "$CMD_RPM_SEARCH" != "package apache-ant is not installed" ]
 then
     echo "    ==>Automatic check failed!"
@@ -1221,7 +1225,7 @@ else
 fi
 
 SYSCTRL_PARM="net.ipv4.ip_local_port_range"
-# (9-27-18 RayD) Changed value from 65535 to 65500, taken from the 7.3 kickstart
+# (27 Sep 2018 - RayD) Changed value from 65535 to 65500, taken from the 7.3 kickstart
 SYSCTRL_PARM_value="9000 65500"
 SYSCTRL_PARM_current=`grep $SYSCTRL_PARM /etc/sysctl.conf | grep -v "#" | tr -d $SYSCTRL_PARM | tr -d "=" | sed 's/^[ \t]*//;s/[ \t]*$//'`
 rows=`grep $SYSCTRL_PARM /etc/sysctl.conf | grep -v "#" | wc -l`
@@ -1251,7 +1255,7 @@ SYSCTRL_LIST="$SYSCTRL_LIST net.core.rmem_default"
 SYSCTRL_LIST="$SYSCTRL_LIST net.core.rmem_max"
 SYSCTRL_LIST="$SYSCTRL_LIST net.core.wmem_default"
 SYSCTRL_LIST="$SYSCTRL_LIST net.core.wmem_max"
-# (9-27-18 RayD) Remove kernel.random.write_wakeup_threshold, which is not in the 7.3 kickstart
+# (27 Sep 2018 - RayD) Remove kernel.random.write_wakeup_threshold, which is not in the 7.3 kickstart
 # SYSCTRL_LIST="$SYSCTRL_LIST kernel.random.write_wakeup_threshold"
 
 for i in $SYSCTRL_LIST
@@ -1267,10 +1271,10 @@ do
   elif [ "$SYSCTRL_PARM" = "fs.file-max" ]; then
 	SYSCTRL_PARM_min=6815744
   elif [ "$SYSCTRL_PARM" = "kernel.shmall" ]; then
-# (9-27-18 RayD) Changed value from 2097152 to 3774873, taken from the 7.3 kickstart
+# (27 Sep 2018 - RayD) Changed value from 2097152 to 3774873, taken from the 7.3 kickstart
 	SYSCTRL_PARM_min=3774873
   elif [ "$SYSCTRL_PARM" = "kernel.shmmax" ]; then
-# (9-27-18 RayD) Changed value from 536870912 to 15461882265, taken from the 7.3 kickstart
+# (27 Sep 2018 - RayD) Changed value from 536870912 to 15461882265, taken from the 7.3 kickstart
 	  SYSCTRL_PARM_min=15461882265
   elif [ "$SYSCTRL_PARM" = "kernel.shmmni" ]; then
 	SYSCTRL_PARM_min=4096
@@ -1282,7 +1286,7 @@ do
 	SYSCTRL_PARM_min=262144  
   elif [ "$SYSCTRL_PARM" = "net.core.wmem_max" ]; then
 	SYSCTRL_PARM_min=1048586  
-# (9-27-18 RayD) Remove kernel.random.write_wakeup_threshold, which is not in the 7.3 kickstart
+# (27 Sep 2018 - RayD) Remove kernel.random.write_wakeup_threshold, which is not in the 7.3 kickstart
 #  elif [ "$SYSCTRL_PARM" = "kernel.random.write_wakeup_threshold" ]; then
 #	SYSCTRL_PARM_min=1024  
   fi
@@ -1319,7 +1323,7 @@ echo '**************************************************************************
 echo '****************************************************************************'
 #####
 
-# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+# (19 Sep 2018 - RayD) Test removed to avoid conflict with Engineering Precheck
 ##
 ##  REQ 1.62 - The “/etc/limits.conf” file is configured correctly
 ##
@@ -1409,7 +1413,7 @@ if [ "$RELEASE" == "5.9" ]; then
     echo "    ==>Not Applicable for Red Hat 5.9.  OK."
     echo "  N/A" > `tty`
 else
-# (9-27-18 RayD) Change licensing folder to /u02/licensing
+# (27 Sep 2018 - RayD) Change licensing folder to /u02/licensing
     existing_symlinks=`ls -l /u02/licensing | egrep "libcrypto.so.1.0.0 -> /usr/lib/libcrypto.so.1.0.1e|libssl.so.1.0.0 -> /usr/lib/libssl.so.1.0.1e" | wc -l`
 
     if [ "$existing_symlinks" == 2 ]
@@ -1531,7 +1535,7 @@ else
 fi
 #####
 
-# (26 Sep 2018 - (RayD) Added test
+# (26 Sep 2018 - RayD) Added test
 #
 #  REQ 1.69 - Confirm /home/oracle owner is correct
 #
@@ -1560,15 +1564,15 @@ echo '[REQ 1.69]  Checking /home/oracle ownership'
 	
 	if [ $wrong == 0 ]; then
 		echo "    ==>Ownership is correct. OK"
-		echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`
+		echo -e "\t\t${GREEN}Passed${NONE}" > `tty`
 	else
 		echo "    ==>Automatic check failed!"
-		echo -e "\t\t\t${RED}Failed${NONE}" > `tty`
+		echo -e "\t\t${RED}Failed${NONE}" > `tty`
 	fi
 #####
 
 
-# (30 Sep 2018 - (RayD) Added test
+# (30 Sep 2018 - RayD) Added test
 #
 #  REQ 1.70 - Confirm enough swap file space
 #
@@ -1603,7 +1607,7 @@ echo '[REQ 1.70]  Checking swap file space'
 #       REQ 2.* HARDWARE CHECKS
 ###############################################################################
 
-# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+# (19 Sep 2018 - RayD) Test removed to avoid conflict with Engineering Precheck
 ##
 ##  REQ 2.2 - Memory Allocation reaches minimum requirements
 ##
@@ -1649,7 +1653,7 @@ echo '[REQ 1.70]  Checking swap file space'
 #echo '****************************************************************************'
 #####
 
-# (19 Sep 2018 - (RayD) Test removed to avoid conflict with Engineering Precheck
+# (19 Sep 2018 - RayD) Test removed to avoid conflict with Engineering Precheck
 ##
 ##  REQ 2.3 - HDD I/O Throughput reaches minimum requirements
 ##
@@ -1709,7 +1713,7 @@ echo '[REQ 1.70]  Checking swap file space'
 #echo 
 #####
 
-# (05 Oct 2018 - (RayD) Add separate test for upgrades
+# (05 Oct 2018 - RayD) Add separate test for upgrades
 #
 #  REQ 2.4 - HDD Install Destination Capacity meets required specification
 #
@@ -1718,7 +1722,7 @@ echo
 echo -n "[REQ 2.4]   Checking HDD Destination Capacity..." > `tty`
 echo "[REQ 2.4]   Checking HDD Destination Capacity..."
 
-if ["$TRELLIS_NEW_INSTALL"="Yes"]; then
+if [$TRELLIS_NEW_INSTALL = "Yes"]; then
 
 echo 'Verify that server has 300GB Space or the following:'
 echo ' - /home/oracle = 20GB'
@@ -1743,7 +1747,7 @@ PARTITION_SHORT_COUNT=`df | egrep -w $PARTITION_LIST_SHORT | wc -l`
 echo ""
 echo "---CHECKING DISK SIZES---"
 #Check for root
-ROOT=`df -kP | awk '{ print $6, $2 }' | grep '/' -w | awk '{ print $2 }'`
+ROOT=`df -kP | awk '{ print $6, $4 }' | grep '/' -w | awk '{ print $2 }'`
 ROOT_MIN_NO_PARTITION=313629081
 ROOT_REAL_NO_PARTITION=314572800
 ROOT_MIN_YES_PARTITION=10391388
@@ -1840,9 +1844,120 @@ fi
 
 # this is an upgrade.  Look for 10G of free TMP space, and either 50GB free if no paritiions, or 25G in /u01 and /u02
 else
-
-
-
+echo 'Verify that server has 50GB available space and 10GB of /tmp available space, or the following:'
+echo ' - /tmp = 10GB free'
+echo ' - /u01 = 22.5GB free'
+echo ' - /u02 = 22.5GB free'
+echo ' - / = 5GB free'
+echo
+df -h
+echo
+free -m
+##  Check partition sizes
+##  Using df -kP to get all sizes in 1k blocks for use in size calculations.
+##  The P makes the output in Posix format, so the lines don't get broken if
+##  too long.
+wrong=0
+PARTITION_LIST_FULL="/ /home/oracle /tmp /u01 /u02"
+PARTITION_LIST_SHORT="/home/oracle|/tmp|/u01|/u02"
+PARTITION_SHORT_COUNT=`df | egrep -w $PARTITION_LIST_SHORT | wc -l`
+echo ""
+echo "---CHECKING DISK SIZES---"
+#Check for root
+ROOT=`df -kP | awk '{ print $6, $2 }' | grep '/' -w | awk '{ print $2 }'`
+ROOT_MIN_NO_PARTITION=23357030
+ROOT_REAL_NO_PARTITION=23592960
+ROOT_MIN_YES_PARTITION=5195694
+ROOT_REAL_YES_PARTITION=5242880
+echo "Checking root partition size and determine if partitions exist..."
+if [ -z $ROOT ]; then
+  echo " - WARNING: Root partition does not exist"
+  wrong=1
+else 
+  if [ $PARTITION_SHORT_COUNT -gt 0 ]; then
+    PARTITION_CHECK=y
+    echo " - INFO: Partitions detected"
+    if [ $ROOT -lt $ROOT_MIN_NO_PARTITION ]; then
+      ROOT_ABOVE_MIN_NO_PARTITION=n
+    else
+      ROOT_ABOVE_MIN_NO_PARTITION=y
+    fi    
+  else
+    CHECK_DIR_NAME="/"
+    CHECK_DIR_MIN=$ROOT_MIN_NO_PARTITION
+    CHECK_DIR_REAL=$ROOT_REAL_NO_PARTITION
+    PARTITION_CHECK=n  
+    if [ $ROOT -lt $ROOT_MIN_NO_PARTITION ]; then
+      ROOT_ABOVE_MIN_NO_PARTITION=n
+      wrong=1      
+	  echo " - WARNING: Root partition has" `bc -l <<< "scale=2; $ROOT / (1024^2)"`"GB available which is less than the" `bc -l <<< "scale=0; $CHECK_DIR_REAL / (1024^2)"`"GB required for Trellis upgrades and no other partitions are detected"
+      echo " - INFO: Please provision more space for the root partition or re-partition the Trellis server according to the Trellis installation manual"
+    else
+      ROOT_ABOVE_MIN_NO_PARTITION=y
+      echo " - SUCCESS: Root partition has" `bc -l <<< "scale=2; $ROOT / (1024^2)"`"GB available which is OK for Trellis upgrades"      
+      if [ $TRELLIS_HOST_PROMPT = b ]; then
+        echo " - INFO:  If site manager is to be installed, please manually check this partition for additional sizing requirements"     
+      fi
+      
+    fi
+  fi
+fi
+echo
+echo "Checking partition sizes..."
+if [ $PARTITION_CHECK = 'y' ]; then
+  for i in $PARTITION_LIST_FULL
+  do
+      CHECK_DIR_NAME=$i
+      CHECK_DIR_VALUE=`df -kP | awk '{ print $6, $4 }' | grep $CHECK_DIR_NAME -w | awk '{ print $2 }'`
+      echo "Checking $i partition"
+    
+      if [ "$CHECK_DIR_NAME" = "/" ]; then
+        CHECK_DIR_MIN=$ROOT_MIN_YES_PARTITION
+        CHECK_DIR_REAL=$ROOT_REAL_YES_PARTITION		
+      elif [ "$CHECK_DIR_NAME" = "/home/oracle" ]; then
+        CHECK_DIR_MIN=20027801
+        CHECK_DIR_REAL=20971520
+      elif [ "$CHECK_DIR_NAME" = "/tmp" ]; then
+        CHECK_DIR_MIN=10391388
+        CHECK_DIR_REAL=10485760
+      elif [ "$CHECK_DIR_NAME" = "/u01" ]; then
+        CHECK_DIR_MIN=23357030
+        CHECK_DIR_REAL=23592960
+      elif [ "$CHECK_DIR_NAME" = "/u02" ]; then
+        CHECK_DIR_MIN=23357030
+        CHECK_DIR_REAL=23592960
+      elif [ "$CHECK_DIR_NAME" = "/u03" ]; then
+        CHECK_DIR_MIN=30513561
+        CHECK_DIR_REAL=31457280
+      elif [ "$CHECK_DIR_NAME" = "/u05" ]; then
+        CHECK_DIR_MIN=30513561      
+        CHECK_DIR_REAL=31457280		
+      fi
+    
+      if [ -z $CHECK_DIR_VALUE ]; then
+        if [ $ROOT_ABOVE_MIN_NO_PARTITION = y ]; then
+           echo " - INFO: $CHECK_DIR_NAME partition does not exist, however it should not matter as the ROOT directory has greater than" `bc -l <<< "scale=0; $ROOT_MIN_NO_PARTITION / (1024^2)"`"GB available"
+        else
+          echo " - WARNING: $CHECK_DIR_NAME partition does not exist, this should have a minimum of" `bc -l <<< "scale=0; $CHECK_DIR_MIN / (1024^2)"`"GB available for Trellis as the ROOT directory is less than" `bc -l <<< "scale=0; $ROOT_MIN_NO_PARTITION / (1024^2)"`"GB"
+          wrong=1
+        fi
+      else  
+        if [ $CHECK_DIR_VALUE -lt $CHECK_DIR_MIN ]; then
+          echo " - WARNING: $CHECK_DIR_NAME partition has" `bc -l <<< "scale=2; $CHECK_DIR_VALUE / (1024^2)"`"GB available which is less than the" `bc -l <<< "scale=0; $CHECK_DIR_REAL / (1024^2)"`"GB required for Trellis, please repartition Trellis server according to the Trellis installation manual"
+          wrong=1
+        else
+          echo " - SUCCESS: $CHECK_DIR_NAME partition has" `bc -l <<< "scale=2; $CHECK_DIR_VALUE / (1024^2)"`"GB available which is OK for Trellis"
+          
+          if [ $TRELLIS_HOST_PROMPT = b -a $CHECK_DIR_NAME = "/u02" ]; then
+            echo "INFO:  If site manager is to be installed, please manually check this partition for additional sizing requirements"     
+          fi
+          
+        fi
+      fi    
+  done
+else
+  echo " - INFO: No partitions detected - Skipping partition checks"
+fi
 
 fi
 
@@ -2000,8 +2115,12 @@ fi
 echo '****************************************************************************'
 echo '******************************IPTables Info**************************'
 echo '***********************Confirm IPTables service = disabled*******************'
-echo -n "[REQ 4.2]   Checking Firewall is disabled (iptables)..." > `tty`
-echo "[REQ 4.2]   Checking Firewall is disabled (iptables)..." 
+
+# (10 Oct 2018 - RayD) Only do iptables check for 6.x systems
+if [ "$RELEASE_VERSION" = "6" ]; then
+
+echo -n "[REQ 4.2]   Checking iptables Firewall is disabled..." > `tty`
+echo "[REQ 4.2]   Checking iptables Firewall is disabled..." 
 
 ##  Check to be sure iptables is turned off
 echo ""
@@ -2020,11 +2139,21 @@ if [ `echo "$IPTABLES" | grep "$IPTABLES_RESULT" | wc -l` != 1 ]; then
 	fi
 	
     #echo "  Automatic check failed!" > `tty`
-	echo -e "\t\t${RED}Failed${NONE}" > `tty`
+	echo -e "\t\t\t${RED}Failed${NONE}" > `tty`
 else
   echo "    ==>iptables service is not running. OK."
-  echo -e "\t\t${GREEN}Passed${NONE}" > `tty`
+  echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`
 fi
+
+else
+
+echo -n "[REQ 4.2]   Skipping iptables Firewall test..." > `tty`
+echo "[REQ 4.2]   Skipping iptables Firewall test..." 
+echo "    ==>Test for iptables service is skipped. OK."
+echo -e "\t\t${GREEN}Skipped${NONE}" > `tty`
+
+fi
+
 echo '****************************************************************************'
 echo '****************************************************************************'
 #####
@@ -2132,58 +2261,68 @@ echo '**************************************************************************
 #  REQ 4.5 - IPv6 Firewall Is Disabled
 #
 echo '****************************************************************************'
-echo '******************************IP6Tables Info**************************'
-echo '***********************Confirm IP6Tables service = disabled*******************'
-echo -n "[REQ 4.5]   Checking Firewall is disabled (ip6tables)..." > `tty`
-echo "[REQ 4.5]   Checking Firewall is disabled (ip6tables)..." 
+echo '******************************IP6Tables Info********************************'
+echo '***********************Confirm IP6Tables service = disabled*****************'
+echo -n "[REQ 4.5]   Checking ip6tables Firewall is disabled..." > `tty`
+echo "[REQ 4.5]   Checking ip6tables Firewall is disabled..." 
 
 ##  Check to be sure ip6tables is turned off
-echo ""
+echo 
 echo "---CHECKING TO BE SURE IPTABLES IS TURNED OFF---"
-IP6TABLES=`service ip6tables status`
 
-if [ `echo "$IP6TABLES" | grep "$IP6TABLES_RESULT" | wc -l` != 1 ]; then
-	echo "    ==>Automatic check failed!"
-    echo "If you want to do it manually you will need to run 'service ip6tables stop && chkconfig ip6tables off' on the command line"    
-	
-    #echo "  Automatic check failed!" > `tty`
-	echo -e "\t${RED}Failed${NONE}" > `tty`
+wrong=0
+if [ "$RELEASE_VERSION" = "6" ]; then
+	if [ `echo "service ip6tables status" | grep "ip6tables: Firewall is not running." | wc -l` != 1 ]; then
+		wrong=1
+		echo "    ==>Automatic check failed!"
+		echo "If you want to do it manually you will need to run 'service ip6tables stop && chkconfig ip6tables off' on the command line"   
+	fi
+else
+	if [ `echo "systemctl status ip6tables" | grep "Unit ip6tables.service could not be found." | wc -l` != 1 ]; then
+		wrong=1
+		echo "    ==>Automatic check failed!"
+		echo "If you want to do it manually you will need to run 'systemctl stop ip6tables' on the command line"   
+	fi
+fi
+
+if [ wrong == 1 ]; then
+	echo -e "\t\t${RED}Failed${NONE}" > `tty`
 else
   echo "    ==>ip6tables service is not running. OK."
-  echo -e "\t${GREEN}Passed${NONE}" > `tty`
+  echo -e "\t\t${GREEN}Passed${NONE}" > `tty`
 fi
+
 echo '****************************************************************************'
 echo '****************************************************************************'
 #####
 
-
+# (10 Oct 2018 - RayD) Add test for Firewalld
 #
 #  REQ 4.6 - Firewalld is disabled for 7.x
 #
 echo '****************************************************************************'
 echo '******************************Firewalld Info********************************'
 echo '*********************Confirm firewalld service = disabled*******************'
-echo -n "[REQ 4.6]   Checking Firewalld is disabled (for RHEL 7.x)..." > `tty`
-echo "[REQ 4.6]   Checking Firewalld is disabled (for RHEL 7.x)..." 
+
+echo -n "[REQ 4.6]   Checking Firewalld is disabled..." > `tty`
+echo "[REQ 4.6]   Checking Firewalld is disabled..." 
 
 ## Skip test if this is a 6.x OS
-if ["${RELEASE:1:1}"] == "6"];
-	echo "Skipping test since this is a 6.x OS"
-	echo -e "\t\t${GREEN}Passed${NONE}" > `tty`
+if [ "$RELEASE_VERSION" = "6" ]; then
+	echo "Skipping Firewalld test"
+	echo -e "\t\t\t${GREEN}Skipped${NONE}" > `tty`
 else
 	##  Check to be sure firewalld is turned off
 	echo "---CHECKING TO BE SURE FIREWALLD IS TURNED OFF---"
 	FIREWALLD=`systemctl status firewalld.service`
 
-	if [ `echo "$FIREWALLD" | grep "firewalld service is not enabled" | wc -l` != 1 ]; then
+	if [ `echo "$FIREWALLD" | grep "Unit firewalld.service could not be found." | wc -l` != 1 ]; then
 		echo "    ==>Automatic check failed!"
-		echo "If you want to do it manually you will need to run 'systemctl mask firewalld' on the command line"    
-	
-		#echo "  Automatic check failed!" > `tty`
-		echo -e "\t\t${RED}Failed${NONE}" > `tty`
+		echo "If you want to do it manually you will need to run 'systemctl stop firewalld' on the command line"    
+		echo -e "\t\t\t${RED}Failed${NONE}" > `tty`
 	else
-		echo "    ==>iptables service is not running. OK."
-		echo -e "\t\t${GREEN}Passed${NONE}" > `tty`
+		echo "    ==>Firewalld service is not running. OK."
+		echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`
 	fi
 fi
 
@@ -2324,9 +2463,13 @@ echo
 echo "Checking current zone exists within supported time zone list"
 echo
 
-# (9/18/2018 RayD) Change Timezone test to be OS dependent
-TIMEZONE=`echo $TIMZONE_CMD`
+# (18 Sep 2018 - RayD) Change Timezone test to be OS dependent
+TIMEZONE='echo $TIMEZONE_CMD'
+echo - "Timezone is $TIMEZONE" 
+echo - "Timezone list  is $TIMEZONE_LIST" 
+#echo $TIMEZONE_LIST | grep -ow $TIMEZONE_CMD 
 ts_count=`echo $TIMEZONE_LIST | grep -ow $TIMEZONE | wc -l`
+#cat /etc/sysconfig/clock | grep ZONE | cut -f2 -d '=' | sed 's/#[\"]//g'
 
 if [ "$ts_count" == 1 ]
 then
