@@ -163,9 +163,9 @@ else
 fi
 ######
 
-# (09 Oct 2018 - RayID) Move RELEASE calculation here so that RELEASE_VERSION can be determined before now.  If can't be resolved, treat as 6.5'
+# (09 Oct 2018 - RayID) Move RELEASE calculation here so that RELEASE_VERSION can be determined now.  If can't be resolved, treat as 6.x'
 RELEASE=`cat /etc/redhat-release | awk '{print $7}'`
-RELEASE_VERSION="$RELEASE" | cut -f1 -d"."
+RELEASE_VERSION=`cat /etc/redhat-release | awk '{print $7}' | cut -f1 -d"."`
 if [ -z "$RELEASE_VERSION" ]; then
 	RELEASE_VERSION="6"
 fi
@@ -265,8 +265,13 @@ else
   FRONT_HOST=`hostname -f`
   FRONT_HOST_SHORT=`hostname -s`
   
+  # (Oct 09 2018 - RayD) ifconfig format changed in 7.x
   if [ $IP_COUNT == 1 ]; then
-    TRELLIS_FRONT_IP=`ifconfig | grep "inet addr" | grep -v 127.0.0.1 | awk  -F: '{ print $2 }' | awk '{ print $1 }'`
+	if [ $RELEASE_VERSION = "7" ]; then
+		TRELLIS_FRONT_IP=`ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{ print $2 }'`
+	else
+		TRELLIS_FRONT_IP=`ifconfig | grep "inet " | grep -v 127.0.0.1 | awk  -F: '{ print $2 }' | awk '{ print $1 }'`
+	fi
   else
 	TRELLIS_FRONT_IP="0.0.0.0"
   fi
@@ -499,8 +504,19 @@ else
 fi
 
 #Time Server and Zone information
-CUR_TIMEZONE=`cat /etc/sysconfig/clock | grep ZONE | cut -f2 -d '=' | sed 's/[\"]//g'`
-CUR_TIMESERVER=`cat /etc/ntp.conf | grep server | grep -v \# | cut -f2 -d" " | sed ':a;N;$!ba;s/\n/ /g' | sed 's/ /\n\t                  /g'`
+
+# (12 Oct 2018 - RayID) Time commands changed in 7.x
+if [ $RELEASE_VERSION = "6" ]; then
+	CUR_TIMEZONE=`cat /etc/sysconfig/clock | grep ZONE | cut -f2 -d '=' | sed 's/[\"]//g'`
+	CUR_TIMESERVER=`cat /etc/ntp.conf | grep server | grep -v \# | cut -f2 -d" " | sed ':a;N;$!ba;s/\n/ /g' | sed 's/ /\n\t                  /g'`
+else
+	CUR_TIMEZONE=`timedatectl | grep 'Time zone' | awk '{print $3}'`
+	if [ -x "/etc/ntp.conf" ]; then
+		CUR_TIMESERVER=`ntpq -p | grep -v 'refid' | grep -v '=====' | cut -f1 | sed ':a;N;$!ba;s/\n/ /g' | sed 's/ /\n\t                  /g'`
+	else	
+		CUR_TIMESERVER="No time server"
+	fi
+fi
 CUR_DATE=`date`
 #  
 
@@ -1508,9 +1524,9 @@ if sudo -u oracle test -e `which java`]; then
 	echo -e "exists" > `tty`
 elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
     _java="$JAVA_HOME/bin/java"
-	echo -e "exists" > `tty`
+	echo -n "exists" > `tty`
 else
-	echo -e "does not exist" > `tty`
+	echo -n "does not exist" > `tty`
 fi
 
 REQ_1_68_PASS=$false
@@ -1528,10 +1544,10 @@ fi
 
 if [ $REQ_1_68_PASS == $true ]; then
     echo "    ==>File permissions retention is correct. OK"
-    echo -e "${GREEN}Passed${NONE}" > `tty`
+    echo -e "\t\t${GREEN}Passed${NONE}" > `tty`
 else
     echo "    ==>Automatic check failed!"
-    echo -e "${RED}Failed${NONE}" > `tty`
+    echo -e "\t\t${RED}Failed${NONE}" > `tty`
 fi
 #####
 
@@ -1564,10 +1580,10 @@ echo '[REQ 1.69]  Checking /home/oracle ownership'
 	
 	if [ $wrong == 0 ]; then
 		echo "    ==>Ownership is correct. OK"
-		echo -e "\t\t${GREEN}Passed${NONE}" > `tty`
+		echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`
 	else
 		echo "    ==>Automatic check failed!"
-		echo -e "\t\t${RED}Failed${NONE}" > `tty`
+		echo -e "\t\t\t${RED}Failed${NONE}" > `tty`
 	fi
 #####
 
@@ -2058,8 +2074,7 @@ echo -n '[REQ 3.1]   Checking VMWare Tools are installed' > `tty`
 echo '[REQ 3.1]   Checking VMWare Tools are installed'
 
 # (12 Oct 2018 - RayD) Add test open-vm-tools
-if [ "$CUR_VIRTUAL_STATUS" == "Yes" ];
-then 
+if [ "$CUR_VIRTUAL_STATUS" == "Yes" ]; then 
     if [ -e /usr/bin/vmware-toolbox-cmd ]; then
         echo "VMWare Guest Tools version `vmware-toolbox-cmd -v` installed."
         echo "    ==>VMWare Tools Installed. OK"
@@ -2073,6 +2088,7 @@ then
 			echo "VMWare Guest Tools not detected."
 			echo "    ==>Automatic check failed!"
 			echo -e "\t\t\t${RED}Failed${NONE}" > `tty`		
+		fi
     fi
 else
     echo "    ==>Not a virtual machine. OK"
@@ -2156,7 +2172,7 @@ else
 echo -n "[REQ 4.2]   Skipping iptables Firewall test..." > `tty`
 echo "[REQ 4.2]   Skipping iptables Firewall test..." 
 echo "    ==>Test for iptables service is skipped. OK."
-echo -e "\t\t${GREEN}Skipped${NONE}" > `tty`
+echo -e "\t\t\t${GREEN}Skipped${NONE}" > `tty`
 
 fi
 
@@ -2469,13 +2485,8 @@ echo
 echo "Checking current zone exists within supported time zone list"
 echo
 
-# (18 Sep 2018 - RayD) Change Timezone test to be OS dependent
-TIMEZONE='echo $TIMEZONE_CMD'
-echo - "Timezone is $TIMEZONE" 
-echo - "Timezone list  is $TIMEZONE_LIST" 
-#echo $TIMEZONE_LIST | grep -ow $TIMEZONE_CMD 
-ts_count=`echo $TIMEZONE_LIST | grep -ow $TIMEZONE | wc -l`
-#cat /etc/sysconfig/clock | grep ZONE | cut -f2 -d '=' | sed 's/#[\"]//g'
+# (18 Sep 2018 - RayD) Change Timezone test to use CUR_TIMEZONE, which is OS-dependent
+ts_count=`echo $TIMEZONE_LIST | grep -ow $CUR_TIMEZONE | wc -l`
 
 if [ "$ts_count" == 1 ]
 then
