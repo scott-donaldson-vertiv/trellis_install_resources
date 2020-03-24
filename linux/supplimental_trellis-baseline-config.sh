@@ -2,7 +2,7 @@
 
 #---------------------------------------------------------------------------------------------
 #
-#      Copyright (c) 2013-2019, Avocent, Vertiv Infrastructure Ltd.
+#      Copyright (c) 2013-2020, Avocent, Vertiv Infrastructure Ltd.
 #      All rights reserved.
 #
 #      Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
 #      DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 #      (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 #      LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-#      ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+#      ON ANY THEORY OF LIABILITY, WHOS_NIC_NAMEER IN CONTRACT, STRICT LIABILITY, OR TORT
 #      (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #      SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
@@ -34,10 +34,13 @@
 #---------------------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------------------
-# Script Name: Trellis-Fix
+# Script Name: supplimental_trellis_baseline-config.sh
+# Description: Reconfigures a RHEL/CentOS/OEL 6.x/7.x host for Trellis(tm) Enterprise 
+#              installation.
 # Created: 2013/05/01
-# Modified: 2019/03/08
-# Author: Michael Santangelo [NETPWR/AVOCENT/UK], Scott Donaldson [VERTIV/AVOCENT/UK]
+# Modified: 2020/03/23
+# Authors: Michael Santangelo [FRM. NETPWR/AVOCENT/UK], Scott Donaldson [VERTIV/AVOCENT/UK]
+# Contributors: Ray Daugherty [VERTIV/AVOCENT/UK], Mark Zagorski [VERTIV/AVOCENT/UK]
 # Company: Vertiv Infrastructure Ltd.
 # Group: Software Delovery, Services
 # Email: global.services.delivery.development@vertivco.com
@@ -112,11 +115,13 @@ chown $ENV_REAL_USER:`id -gn ${ENV_REAL_USER}` ${CFG_LOGFILE_PATH}
 ##
 #  Log Output
 #
-DATENOW=`date +%m%d%H%M`
-exec > >(tee ${CFG_LOGFILE_PATH}/trellis-fix_$DATENOW.log)
+CFG_LOGFILE="trellis-base-line-config_${ENV_HOSTNAME}_`date +"%Y%m%d-%H%M"`.log"
+CFG_LOGFILE_PATH="${CFG_OUTPUT_TMP_FOLDER}/${CFG_LOGFILE}"
+
+exec > >(tee ${CFG_LOGFILE_PATH})
 
 ##  Find out if user wants problems found fixed automatically
-echo -n "[WARNING]: This script will make changes to the system, do you want to continue (y/n)?: "
+echo -n "[Caution]: This script will make changes to the system, do you want to continue (y/n)?: "
 read CONT
 echo ""
 if [ -z $CONT ]; then
@@ -176,70 +181,114 @@ if [ $SIDE = "b" -o $SIDE = "back" -o $SIDE = "B" -o $SIDE = "Back" -o $SIDE = "
 elif [ $SIDE = "f" -o $SIDE = "front" -o $SIDE = "F" -o $SIDE = "Front" -o $SIDE = "FRONT" ]; then
   SIDE=f
 else
-  echo "Please indicate if the side being installed is front or back"
+  echo "Please respond with either [f]ront or [b]ack for the host server."
   exit
 fi
 
+##  Check Red Hat release version and set a number of variables based
+##  on the version. Primitive way to check release version, but aside
+##  from compiling a kernel -> release reference, the best way at this time.
+# TODO: Replace with new version handling
+echo "---CHECKING RED HAT ENTERPRISE LINUX VERSION---"
+RELEASE_MAJOR=`(rpm -q --queryformat '%{RELEASE}' rpm | grep -o [[:digit:]]*\$)`
+
+if [ -f '/etc/centos-release' ]; then
+	RELEASE=`cat /etc/redhat-release | awk -F 'release ' '{print $2}' | awk -F '.' '{print($1 "." $2)}'`
+
+	export RELEASE_DISTRO="CENTOS"
+elif [ -f '/etc/redhat-release' ]; then
+	RELEASE=`cat /etc/redhat-release | awk '{ print $7 }'`
+
+	if grep -i "Oracle" /etc/redhat-release; then
+		export RELEASE_DISTRO="ORACLE"
+	else
+		export RELEASE_DISTRO="REDHAT"
+	fi
+else
+	echo "[Error]: Release information not found."
+	export RELEASE_DISTRO="UNKNOWN"
+fi
+echo "[Debug]: Distribution is $RELEASE_DISTRO."
+
+
 ##  Get the IP and hostname of the server not being installed
 if [ $SIDE = b ]; then
-  BACK_HOST=`hostname`
-  BACK_HOST_SHORT=`hostname | awk -F. '{ print $1 }'`
-  BACK_IP=`ifconfig | grep "inet addr" | grep -v 127.0.0.1 | awk  -F: '{ print $2 }' | awk '{ print $1 }'`
+  HOST_BACK_FQDN=`hostname`
+  HOST_BACK_NAME=`hostname | awk -F. '{ print $1 }'`
+
+  if [ $RELEASE_MAJOR = "7" ]; then
+        HOST_BACK_IP=`ip addr | grep "inet " | grep -v 127.0.0.1 | awk  -F ' ' '{ print $2 }' | awk -F '/' '{print $1}'`
+  elif [ $RELEASE_MAJOR = "6" ]; then
+        HOST_BACK_IP=`ifconfig | grep "inet addr" | grep -v 127.0.0.1 | awk  -F: '{ print $2 }' | awk '{ print $1 }'`
+  else
+    HOST_BACK_IP=''
+  fi
+
   echo ""
   echo -n "What is the hostname of the front server (FQDN preferred)?: "
-  read FRONT_HOST
-  FRONT_HOST_SHORT=`echo "$FRONT_HOST" | awk -F. '{ print $1 }'`
+  read HOST_FRONT_FQDN
+  HOST_FRONT_NAME=`echo "$HOST_FRONT_FQDN" | awk -F. '{ print $1 }'`
   echo ""
-  echo "INFO: The name entered was $FRONT_HOST, will try to verify the server by hostname"
-  ping -c 1 $FRONT_HOST
+  echo "INFO: The name entered was $HOST_FRONT_FQDN, will try to verify the server by hostname"
+  ping -c 1 $HOST_FRONT_FQDN
   if [ $? -eq "0" ]; then
-    echo "SUCCESS: $FRONT_HOST was pinged succesfully"
+    echo "[Info]: $HOST_FRONT_FQDN was pinged succesfully"
   else
-    echo "WARNING: $FRONT_HOST was not pinged successfully. This could just mean that the DNS is not set up correctly yet, or there could be a problem with the name entered that will have to be fixed in the /etc/hosts file manually"
+    echo "[Warning]: $HOST_FRONT_FQDN was not pinged successfully. This could just mean that the DNS is not set up correctly yet, or there could be a problem with the name entered that will have to be fixed in the /etc/hosts file manually"
   fi
   echo ""
   echo -n "What is the IP address for the front server?: "
-  read FRONT_IP
+  read HOST_FRONT_IP
   echo""
-  echo "INFO: The ip address entered was $FRONT_IP, will try to verify that the ip is active"
-  ping -c 1 $FRONT_IP
+  echo "INFO: The ip address entered was $HOST_FRONT_IP, will try to verify that the ip is active"
+  ping -c 1 $HOST_FRONT_IP
   if [ $? -eq "0" ]; then
-    echo "SUCCESS: $FRONT_IP was pinged succesfully"
+    echo "[Info]: $HOST_FRONT_IP was pinged succesfully"
   else
-    echo "WARNING: $FRONT_IP was not pinged successfully. This could just mean that there was a brief network blip, or the IP could have been entered wrong and will need to be fixed in the /etc/hosts file manually"
+    echo "[Warning]: $HOST_FRONT_IP was not pinged successfully. This could just mean that there was a brief network blip, or the IP could have been entered wrong and will need to be fixed in the /etc/hosts file manually"
   fi
 else
-  FRONT_HOST=`hostname`
-  FRONT_HOST_SHORT=`hostname | awk -F. '{ print $1 }'`
-  FRONT_IP=`ifconfig | grep "inet addr" | grep -v 127.0.0.1 | awk  -F: '{ print $2 }' | awk '{ print $1 }'`
+  HOST_FRONT_FQDN=`hostname -f`
+  HOST_FRONT_NAME=`hostname | awk -F. '{ print $1 }'`
+
+  if [ $RELEASE_MAJOR = "7" ]; then
+	HOST_FRONT_IP=`ip addr | grep "inet " | grep -v 127.0.0.1 | awk  -F ' ' '{ print $2 }' | awk -F '/' '{print $1}'`
+  elif [ $RELEASE_MAJOR = "6" ]; then
+	HOST_FRONT_IP=`ifconfig | grep "inet addr" | grep -v 127.0.0.1 | awk  -F: '{ print $2 }' | awk '{ print $1 }'`
+  else
+    HOST_FRONT_IP=''
+  fi
+  
   echo ""
   echo -n "What is the hostname of the back server (FQDN preferred)?: "
-  read BACK_HOST
-  BACK_HOST_SHORT=`echo "$BACK_HOST" | awk -F. '{ print $1 }'`
+  read HOST_BACK_FQDN
+  HOST_BACK_NAME=`echo "$HOST_BACK_FQDN" | awk -F. '{ print $1 }'`
   echo ""
-  echo "INFO: The name entered was $BACK_HOST, will try to verify the server by hostname"
-  ping -c 1 $BACK_HOST
+  echo "INFO: The name entered was $HOST_BACK_FQDN, will try to verify the server by hostname"
+  ping -c 1 $HOST_BACK_FQDN
   if [ $? -eq "0" ]; then
-    echo "SUCCESS: $BACK_HOST was pinged succesfully"
+    echo "SUCCESS: $HOST_BACK_FQDN was pinged succesfully"
   else
-    echo "WARNING: $BACK_HOST was not pinged successfully. This could just mean that the DNS is not set up correctly yet, or there could be a problem with the name entered that will have to be fixed in the /etc/hosts file manually"
+    echo "WARNING: $HOST_BACK_FQDN was not pinged successfully. This could just mean that the DNS is not set up correctly yet, or there could be a problem with the name entered that will have to be fixed in the /etc/hosts file manually"
   fi
   echo ""
   echo -n "What is the IP address for the back server?: "
-  read BACK_IP
+  read HOST_BACK_IP
   echo""
-  echo "INFO: The ip address entered was $BACK_IP, will try to verify that the ip is active"
-  ping -c 1 $BACK_IP
+  echo "INFO: The ip address entered was $HOST_BACK_IP, will try to verify that the ip is active"
+  ping -c 1 $HOST_BACK_IP
   if [ $? -eq "0" ]; then
-    echo "SUCCESS: $BACK_IP was pinged succesfully"
+    echo "SUCCESS: $HOST_BACK_IP was pinged succesfully"
   else
-    echo "WARNING: $BACK_IP was not pinged successfully. This could just mean that there was a brief network blip, or the IP could have been entered wrong and will need to be fixed in the /etc/hosts file manually"
+    echo "WARNING: $HOST_BACK_IP was not pinged successfully. This could just mean that there was a brief network blip, or the IP could have been entered wrong and will need to be fixed in the /etc/hosts file manually"
   fi
 fi
 
-##  Making a directory where all changed config files can be backed up
-##  from the original state in case something goes wrong or needs to be
-##  changed back.
+##
+#  Making a directory where all changed config files can be backed up
+#  from the original state in case somOS_NIC_NAMEing goes wrong or needs to be
+#  changed back.
+#
 if [ -d $BACKUP ]; then
   DATENOW=`date +%m%d%H%M`
   tar -cf /tmp/trellis_backups_$DATENOW $BACKUP/*
@@ -248,192 +297,269 @@ if [ -d $BACKUP ]; then
 else
   mkdir $BACKUP
   chmod 755 $BACKUP
-  fi
-
-##  Check Red Hat release version and set a number of variables based
-##  on the version. Primitive way to check release version, but aside
-##  from compiling a kernel -> release reference, the best way at this time.
-# TODO: Replace with new version handling
-# TODO: Remove RHEL 5.x Support
-# TODO: Add RHEL 7.x Support
-echo "---CHECKING RED HAT ENTERPRISE LINUX VERSION---"
-RELEASE=`cat /etc/redhat-release | awk '{ print $7 }'`
-if [ "$RELEASE" = "6.4" -o "$RELEASE" = "5.9" -o "$RELEASE" = "6.3" -o "$RELEASE" = "6.5" ]; then
-  echo "Red Hat Enterprise release $RELEASE is supported for this installation"
-else
-  echo "Red Hat Enterprise release $RELEASE is not supported for this installation, exiting"
-  exit
 fi
 
+
+# TODO: Add dynamic loading for Trellis Release & Supported OS
+declare -a RELEASE_SUPPORTED=( "7.6" "7.5" "7.4" "7.3" "6.10" "6.9" "6.8" "6.7" )
+declare -a RELEASE_DISTRO_SUPPORTED=( "CENTOS" "REDHAT" "ORACLE" )
+
+if [[ " ${RELEASE_DISTRO_SUPPORTED[@]} " =~ " ${RELEASE_DISTRO} " ]];  then
+	if [ ${RELEASE_DISTRO} == "ORACLE" ]; then
+		echo "[Warning]: This distribution is not officially supported for client installations. Internal use only."
+	fi
+
+	echo "[Debug]: Release $RELEASE."
+
+	if [[ " ${RELEASE_SUPPORTED[@]} " =~ " ${RELEASE} " ]];  then
+	  echo "[Info]: Operating system release $RELEASE is supported for this installation"
+	else
+	  echo "[Info]: Operating system release $RELEASE is not supported for this installation, exiting"
+	  exit
+	fi
+fi
+
+##
+#  Prepare Package Lists
+#
 # TODO: Cleanup Package Handling
-if [ $RELEASE = "5.9" ]; then
-  IPTABLES_RESULT="Firewall is stopped."
-  PKG_LIST="kexec-tools fipscheck device-mapper-multipath sgpio emacs libsane-hpaio xorg-x11-utils xorg-x11-server-Xnest binutils compat-db compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel gcc gcc-c++ glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel make openmotif sysstat unixODBC unixODBC-devel glibc-devel.i386 java-1.6.0-openjdk screen"
-elif [ $RELEASE = "6.3" ]; then
+if [ $RELEASE_MAJOR = "6" ]; then
   IPTABLES_RESULT="iptables: Firewall is not running."
-  PKG_LIST="binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl.i686 redhat-lsb redhat-lsb.i686 sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk screen"
-elif [ $RELEASE = "6.4" ]; then
+  OS_PACKAGES_BASE="binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl.i686 redhat-lsb redhat-lsb-core.i686 sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk java-1.7.0-openjdk screen"
+  OS_PACKAGES_DEBUG="bpftool iptraf nmap strace tuned tuned-utils-systemtap"
+  OS_PACKAGES_REMOVE="aic94xxfirmware alsafirmware bind cronieanacron dhcpd dovecot httpd ivtvfirmware iwl*firmware iwl1000firmware iwl100firmware iwl105firmware iwl2000firmware iwl3160firmware iwl3945firmware iwl3945firmware iwl5150firmware iwl6000firmware iwl6000g2afirmware iwl6050firmware iwl7260firmware netsnmpd rsh rshserver rshserver squid telnet telnetserver tftpserver vsftpd wpa_supplicant ypbind ypserv"
+elif [ $RELEASE_MAJOR = "7" ]; then
   IPTABLES_RESULT="iptables: Firewall is not running."
-  PKG_LIST="binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl.i686 redhat-lsb redhat-lsb-core.i686 sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk java-1.7.0-openjdk screen"
-elif [ $RELEASE = "6.5" ]; then
-  IPTABLES_RESULT="iptables: Firewall is not running."
-  PKG_LIST="binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl.i686 redhat-lsb redhat-lsb-core.i686 sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk java-1.7.0-openjdk screen"
+  OS_PACKAGES_BASE="binutils cloog compat-db compat-db47 compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 coreutils cpp device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 lsof make mpfr mtools openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-x11-server-utilsvi  xorg-x11-utils"
+  OS_PACKAGES_DEBUG="bpftool iptraf nmap pcp-pmda-bcc pcp-pmda-bonding pcp-pmda-trace strace tuned tuned-utils-systemtap"
+  OS_PACKAGES_REMOVE="aic94xxfirmware alsafirmware bind cronieanacron dhcpd dovecot httpd ivtvfirmware iwl*firmware iwl1000firmware iwl100firmware iwl105firmware iwl2000firmware iwl3160firmware iwl3945firmware iwl3945firmware iwl5150firmware iwl6000firmware iwl6000g2afirmware iwl6050firmware iwl7260firmware netsnmpd rsh rshserver rshserver squid telnet telnetserver tftpserver vsftpd wpa_supplicant ypbind ypserv"
+  if [ $RELEASE_DISTRO = 'ORACLE' ]; then
+	$OS_PACKAGES_BASE += " kmod-oracleasm oracleasm-support oracle-database-preinstall-18c"
+  elif [ $RELEASE_DISTRO = 'CENTOS' ]; then
+	$OS_PACKAGES_BASE += " "
+  fi
 fi
+
   
-##  Check to be sure selinux is disabled
-##  No real reason given as to why this needs to be disabled.
-##  But, for now it's the requirement.
+##
+#  Check to be sure selinux is disabled
+#  No real reason given as to why this needs to be disabled.
+#  But, for now it's the requirement.
+#
 # TODO: Enable SELinux as Permissive
 echo ""
 echo "---CHECKING FOR SELINUX TO BE DISABLED---"
-SELINUX=`getenforce`
-if [ $SELINUX = Disabled ]; then
-  echo "Selinux is $SELINUX, meeting Trellis requirements, moving on"
+OS_CONFIG_SELINUX=`getenforce`
+if [ $OS_CONFIG_SELINUX = 'Disabled' ]; then
+  echo "[Info]: SELinux is $OS_CONFIG_SELINUX, this meets requirement REQ 4.4."
+elif [ $OS_CONFIG_SELINUX = 'Permissive' ]; then
+  echo "[Warning]: SELinux Permissive is funcionally correct however may produce failures in the official Trellis Precheck Utility."
+  echo "[Info]: SELinux is $OS_CONFIG_SELINUX, this meets requirement REQ 4.4."
 else
-  echo "Selinux is $SELINUX, not meeting Trellis requirements. Changing to disabled"
+  echo "[Warning]: SELinux is $OS_CONFIG_SELINUX, this does not meets requirement REQ 4.4."
+  echo "[Action]: Modifying SELinux configuration..."
   cp /etc/selinux/config $BACKUP/etc_selinux_config.bak
-  sed -i 's@^\(SELINUX=\).*$@\1disabled@' /etc/selinux/config
-  echo "This problem has been fixed in /etc/selinux/config, system will probably require a reboot for new settings to take effect" 
+  sed -i 's@^\(SELINUX=\).*$@\1permissive@' /etc/selinux/config
+  setenforce Permissive
+  echo "[Info]: SELinux configuration updated."
 fi
 
-##  Check to be sure iptables is turned off
-# TODO: Handle firewalld on RHEL 7.x
+##  
+#  Verify firewall is disabled.
+#
+#  TODO: Handle firewalld on RHEL 7.x
 echo ""
 echo "---CHECKING TO BE SURE IPTABLES IS TURNED OFF---"
-IPTABLES=`service iptables status`
-if [ "$IPTABLES" != "$IPTABLES_RESULT" ]; then
-  echo "iptables service is running, turning it off"
-  service iptables stop
-  chkconfig iptables off
-  echo "This problem has been fixed by running 'service iptables stop && chkconfig iptables off'"
+if [ $RELEASE_MAJOR = '7' ]; then
+	echo "[Error]: Unimplemented check for CentOS/Red Hat/Oracle Linux 7.x"
 else
-  echo "iptables service is not running, moving on"
+	IPTABLES=`service iptables status`
+	if [ "$IPTABLES" != "$IPTABLES_RESULT" ]; then
+	  echo "[Warning]: The firewall service iptables is running, this does not meet reqirement REQ 4.2."
+	  echo "[Action]: Stopping & disabling iptables service..."
+	  service iptables stop
+	  chkconfig iptables off
+	  echo "[Info]: The firewall service iptables has been stopped and disabled to meet reqirement REQ 4.2."
+	else
+	  echo "[Info]: The firewall service iptables is disabled and meets requirement REQ 4.2."
+	fi
 fi
 
-##  Checking to see if NetworkManager is off. Trellis can run with it
-##  but since we are now turning off X anyway, it is far easier to deal
-##  with networking without it.
+##
+#  Checking to see if NetworkManager is off. Trellis can run with it
+#  but since we are now turning off X anyway, it is far easier to deal
+#  with networking without it.
+#
 echo ""
 echo "---CHECKING FOR NETWORK MANAGER---"
-NETMAN=`service NetworkManager status`
-NETMAN_STAT=$?
-if [ "$NETMAN_STAT" -eq "0" ]; then
-  echo "NetworkManager service is running"
-  service NetworkManager stop
-  chkconfig NetworkManager off
-  echo "This problem has been fixed by running 'service NetworkManager stop && chkconfig NetworkManager off'"
+if [ $RELEASE_MAJOR = '7' ]; then
+	echo "[Error]: Unimplemented check for CentOS/Red Hat/Oracle Linux 7.x"
 else
-  echo "NetworkManager service is not running, moving on"
+	NETMAN=`service NetworkManager status`
+	NETMAN_STAT=$?
+	if [ "$NETMAN_STAT" -eq "0" ]; then
+	  echo "NetworkManager service is running"
+	  service NetworkManager stop
+	  chkconfig NetworkManager off
+	  echo "This problem has been fixed by running 'service NetworkManager stop && chkconfig NetworkManager off'"
+	else
+	  echo "NetworkManager service is not running, moving on"
+	fi
 fi
 
-##  Check DHCP configuration and number of routable IP's
-##  DHCP needs to be set to either static or none
-##  and there can be only 1 routable IP
+##
+#  Check DHCP configuration and number of routable IP's
+#  DHCP needs to be set to either static or none
+#  and there can be only 1 routable IP
+#
 echo ""
 echo "---CHECKING DHCP CONFIG AND NIC CONFIGURATION---"
-ETH=`ifconfig | awk '{ print $1 }'| head -1`
-IP_COUNT=`ifconfig | grep "inet addr:" | grep -v "127.0.0.1" | wc -l`
-if [ $IP_COUNT -gt 1 ]; then
-  echo "ERROR: There are $IP_COUNT ethernet devices on this system with routeable IP's. Need to go back and reconfigure the system to have only 1 routable device. Findings and fixes from here forward may be incorrect with more than 1 ethernet device present"
-fi
-PROTO=`grep "BOOTPROTO" /etc/sysconfig/network-scripts/ifcfg-$ETH | awk -F= '{ print $2 }' | sed 's@"@@g'`
-if [ $PROTO = dhcp ]; then
-  echo "DHCP settings for $ETH are set to $PROTO, not static or none as required, changing to static"
-  cp /etc/sysconfig/network-scripts/ifcfg-$ETH $BACKUP/ifcfg-$ETH.bak
-  sed -i "s@$PROTO@static@g" /etc/sysconfig/network-scripts/ifcfg-$ETH
-  echo "This problem has been fixed in /etc/sysconfig/network-scripts/ifcfg-$ETH, system will probably require a reboot for new settings to take effect"
-  echo "Since bootproto was set to DHCP, a permanent IP, Gateway, and Netmask may need to be put in to /etc/sysconfig/network-scripts/ifcfg-$ETH to assure a static IP is, indeed, in place"
+
+if [ $RELEASE_MAJOR = "7" ]; then
+	OS_NIC_NAME=`ip link | grep -v LOOPBACK | grep -v 'link/' | awk -F ': ' '{ print $2 }'`
+	OS_NIC_QTY=`ip addr | grep "inet " | grep -v 127.0.0.1 | wc -l`
 else
-  echo "DHCP settings for $ETH are set to $PROTO which is acceptable for Trellis installs"
+	OS_NIC_NAME=`ifconfig | awk '{ print $1 }'| head -1`
+	OS_NIC_QTY=`ifconfig | grep "inet addr:" | grep -v "127.0.0.1" | wc -l`
 fi
 
-##  Check that all required packages are installed
-##  Engineering has a specific set of packages that must be installed
-##  on all systems in order for Trellis installs to work. It looks like
-##  mostly packages required for Oracle, but there may be other reasons
-##  as well
+if [ $OS_NIC_QTY -gt 1 ]; then
+  echo "[Error]: There are $OS_NIC_QTY Ethernet devices on this system with routeable IP's. Need to go back and reconfigure the system to have only 1 routable device. Findings and fixes from here forward may be incorrect with more than 1 OS_NIC_NAMEernet device present"
+fi
+
+OS_NIC_PROTO=`grep "BOOTPROTO" /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME | awk -F= '{ print $2 }' | sed 's@"@@g'`
+
+if [ $OS_NIC_PROTO = dhcp ]; then
+  echo "[Info]: Interface $OS_NIC_NAME is set to $OS_NIC_PROTO which does not meet Trellis requirements for static or none."
+  echo "[Action]: Disabling DHCPD as required..."
+  cp /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME $BACKUP/ifcfg-$OS_NIC_NAME.bak
+  # TODO: Take dynamic values and inject into configuration file.
+  sed -i "s@$OS_NIC_PROTO@none@g" /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME
+  echo "[Info]: Interface $OS_NIC_NAME configuration file /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME updated."
+  echo "[Warning]: Since bootOS_NIC_PROTO was set to DHCP, a permanent IP, Gateway, and Netmask may need to be put in to /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME to assure a static IP is, indeed, in place"
+else
+  echo "[Info]: Interface $OS_NIC_NAME is set to $OS_NIC_PROTO which passes Trellis requirements."
+fi
+
+##
+#  Check that all required packages are installed
+#  Engineering has a specific set of packages that must be installed
+#  on all systems in order for Trellis installs to work. It looks like
+#  mostly packages required for Oracle, but there may be other reasons
+#  as well
+#
 echo ""
-echo "---CHECKING FOR INSTALLED PACKAGES---"
-for PACKAGE in $PKG_LIST; do
+echo "---CHECKING FOR REQUIRED PACKAGES---"
+for PACKAGE in $OS_PACKAGES_BASE; do
   echo "Checking for package: $PACKAGE"
   CHECK=`rpm -q $PACKAGE`
   if [ "$CHECK" = "package $PACKAGE is not installed" ]; then
-    echo "$PACKAGE is not installed on this system at this time, installing now"
-    yum -y install --nogpgcheck $PACKAGE
-    echo "This problem has been fixed and $PACKAGE has been installed"
+    echo "[Warning]: Required $PACKAGE is not installed."
+	echo "[Action]: Installing required package $PACKAGE from repository..."
+    # TODO: Validated installation succeeded.
+	yum -y install $PACKAGE
+    echo "[Info]: Required package $PACKAGE has been installed."
   else
-    echo "Package $PACKAGE is installed on the system"
+    echo "[Info]: Required package $PACKAGE is already installed."
+  fi
+done
+
+# TODO: Make debug packages conditional based on script launch flags.
+echo "---CHECKING FOR TROUBLESHOOTING PACKAGES---"
+for PACKAGE in $OS_PACKAGES_DEBUG; do
+  echo "Checking for package: $PACKAGE"
+  CHECK=`rpm -q $PACKAGE`
+  if [ "$CHECK" = "package $PACKAGE is not installed" ]; then
+    echo "[Warning]: Required $PACKAGE is not installed."
+	echo "[Action]: Installing troubleshooting package $PACKAGE from repository..."
+	# TODO: Validated installation succeeded.
+    yum -y install $PACKAGE
+    echo "[Info]: Optional troubleshooting package $PACKAGE has been installed."
+  else
+    echo "[Info]: Optional troubleshooting package $PACKAGE is already installed."
   fi
 done
 
 ##
 #  Make sure package ant is not installed
 #
-echo ""
-echo "---CHECKING TO BE SURE ANT IS NOT INSTALLED---"
-ANT=`rpm -q ant`
-if [ "$ANT" = "package ant is not installed" ]; then
-  echo "ant is not installed, moving on"
-else
-  echo "ant is installed on this system, removing it"
-  yum -y erase --nogpgcheck ant
-  echo "This problem has been fixed and ant has been uninstalled"
-fi
+# TODO: Make packages removal conditional based on script launch flags.
+echo "---CHECKING FOR TROUBLESHOOTING PACKAGES---"
+for PACKAGE in $OS_PACKAGES_REMOVE; do
+  echo "Checking for package: $PACKAGE"
+  CHECK=`rpm -q $PACKAGE`
+  if [ "$CHECK" = "package $PACKAGE is not installed" ]; then
+    echo "[Warning]: Installed $PACKAGE is black listed."
+	echo "[Action]: Removing $PACKAGE from system..."
+	# TODO: Validate removal succeeded.
+    yum -y erase $PACKAGE
+    echo "[Info]: Blacklisted package $PACKAGE has been removed."
+  else
+    echo "[Info]: Blacklisted package $PACKAGE is not present."
+  fi
+done
 
 
-##  Verify the oracle user and groups exist
-##  Open question on whether the oracle user has to be uid 500
-##  or if that's just a general assumption, but not a requirement.
-##  For now just going to make sure oracle user exists along with
-##  the dba and oinstall groups
+##  
+#  Verify the oracle user and groups exist
+#  Open question on whOS_NIC_NAMEer the oracle user has to be uid 500
+#  or if that's just a general assumption, but not a requirement.
+#  For now just going to make sure oracle user exists along with
+#  the dba and oinstall groups
+#
 echo ""
 echo "---CHECKING FOR REQUIRED ORACLE USER AND GROUPS---"
-DBA_GRP=`cat /etc/group | grep "^dba:" | wc -l`
-OINS_GRP=`cat /etc/group | grep "^oinstall:" | wc -l` 
-ORA_USER=`cat /etc/passwd | grep "^oracle:" | wc -l`
+AUTH_GROUP_DBA=`cat /etc/group | grep "^dba:" | wc -l`
+AUTH_GROUP_OINSTALL=`cat /etc/group | grep "^oinstall:" | wc -l` 
+AUTH_USER_ORACLE=`cat /etc/passwd | grep "^oracle:" | wc -l`
 ##  Checking for dba group
-if [ $DBA_GRP -eq 0 ]; then
-  echo "Group dba does not exist on this server, adding it"
+if [ $AUTH_GROUP_DBA -eq 0 ]; then
+  echo "[Warning]: User group dba does not exists, this does not meet requirement REQ 1.51"
+  echo "[Action]: Creating user group dba..."
   groupadd dba
-  echo "This problem has been fixed and the dba group has been created"
+  echo "[Info]: Group dba created."
 else
-  echo "Group dba exists, moving on"
+  echo "[Info]: User group dba already exists."
 fi 
 ## Checking for oinstall group
-if [ $OINS_GRP -eq 0 ]; then
-  echo "Group oinstall does not exist on this server, adding it"
+if [ $AUTH_GROUP_OINSTALL -eq 0 ]; then
+  echo "[Warning]: User group oinstall does not exists, this does not meet requirement REQ 1.51"
+  echo "[Action]: Creating user group oinstall..."
   groupadd oinstall
-  echo "This problem has been fixed and the oinstall group has been created"
+  echo "[Info]: Group oinstall created."
 else
-  echo "Group oinstall exists, moving on"
+  echo "[Info]: User group oinstall already exists."
 fi
 ##  Checking for oracle user
-if [ $ORA_USER -eq 0 ]; then
-  echo "oracle user does not exist on this server, adding it"
-  useradd -g oinstall -G dba -p GQehkuyRJL3mw oracle
-  echo "This problem has been fixed and the oracle user has been created"
+if [ $AUTH_USER_ORACLE -eq 0 ]; then
+  echo "[Warning]: User account oracle does not exists, this does not meet requirement REQ 1.51"
+  echo "[Action]: Creating user account oracle..."
+  # TODO: Remove hard coded password.
+  # TODO: Support pre-hashed password.
+  useradd -g oinstall -G dba -p 39q7S4TMKPZRNfmZNsmz oracle
+  echo "[Info]: User account oracle has been created."
 else
-  echo "User oracle exists, moving on"
+  echo "[Info]: User account oracle already exists."
 fi
 
 ##  Set up the oracle users .bash_profile
 ##  This will not work if the oracle user does not exist
 echo ""
 echo "---SET UP THE ORACLE .BASH_PROFILE---"
-  cp /home/oracle/.bash_profile $BACKUP/bash_profile.bak
+  cp ~oracle/.bash_profile $BACKUP/bash_profile.bak
 
   for VAR in MW_HOME ORACLE_HOME ORACLE_SID PATH HISTCONTROL HISTSIZE HISTFILE PS1 "set" "Added per Trellis"; do
-    sed -i "/$VAR/d" /home/oracle/.bash_profile
+    sed -i "/$VAR/d" ~oracle/.bash_profile
   done
 
 	# TODO: Update paths for Trellis 5.x
-  cat >> /home/oracle/.bash_profile << EOF
+  cat >> ~oracle/.bash_profile << EOF
 
 ## Added per Trellis install requirements
 set /home/oracle/.bash_profile
 
 MW_HOME=/u01/fm/11.1.1.7/
-ORACLE_HOME=/u01/app/oracle/product/11.2.0
+ORACLE_HOME=/u01/app/oracle/product/12.1.0
 ORACLE_SID=orcl
 export MW_HOME ORACLE_HOME ORACLE_SID
 
@@ -444,7 +570,7 @@ EOF
 ##  This line needs to be separate because it can't resolve the 
 ##  variables, they need to be put in to the .bash_profile as variables
 ##  to be resolved there
-  echo 'export PATH=$ORACLE_HOME/bin:$PATH' >> /home/oracle/.bash_profile
+  echo 'export PATH=$ORACLE_HOME/bin:$PATH' >> ~oracle/.bash_profile
   echo "oracle user's .bash_profile set up correctly, moving on"
 
 ##  Set up the umask for oracle user in .bashrc
@@ -457,13 +583,13 @@ echo "---SETTING UP THE ORACLE .BASHRC---"
   cp /home/oracle/.bashrc $BACKUP/bashrc.bak
 
   for VAR in 'umask'; do
-    sed -i /$VAR/d /home/oracle/.bashrc
+    sed -i /$VAR/d ~oracle/.bashrc
   done
 
-  cat >> /home/oracle/.bashrc << EOF
+  cat >> ~oracle/.bashrc << EOF
 
 ## Added per Trellis install requirements
-umask 002
+umask 0002
 EOF
 echo "umask set up correctly in oracle's .bashrc file, moving on"
 
@@ -474,6 +600,7 @@ for DIR in /u01 /u02 /u03 /u05 /u99 /u99/OracleAgent; do
   ls $DIR
   if [ $? -eq 0 ]; then
     echo "$DIR exists, making sure permissions are correct"
+	chown -h oracle:oinstall $DIR
     chown -R oracle:oinstall $DIR
     chmod -R 775 $DIR
   else
@@ -557,7 +684,7 @@ service nodemgrsvc
         type            = UNLISTED
         disable         = yes
         socket_type     = stream
-        protocol        = tcp
+        OS_NIC_PROTOcol        = tcp
         wait            = yes
         user            = root
         port            = 5556
@@ -581,7 +708,7 @@ service nodemgrsvc
         type            = UNLISTED
         disable         = yes
         socket_type     = stream
-        protocol        = tcp
+        OS_NIC_PROTOcol        = tcp
         wait            = yes
         user            = root
         port            = 5556
@@ -611,7 +738,7 @@ oracle          ALL=                    NOPASSWD: /u03/root/postinstall_env_setu
 oracle          ALL=                    NOPASSWD: /u03/root/preinstall_env_setup.sh
 oracle          ALL=                    NOPASSWD: /u03/root/sli_install.bin
 EOF
-  echo "This problem has been fixed and /etc/sudoers has been updated to have proper escalations for the oracle user"
+  echo "[Info]: This problem has been fixed and /etc/sudoers has been updated to have proper escalations for the oracle user"
 
 ##  Setting up limits in /etc/security/limits.conf
 ##  Need to set various hard and soft limits for oracle
@@ -782,38 +909,73 @@ echo "Adding Trellis specific entries to the bottom of the /etc/hosts file"
 cat >> /etc/hosts << EOF
 
 ##  Added entries for Trellis
-$FRONT_IP $FRONT_HOST $FRONT_HOST_SHORT weblogic-admin Presentation-Operational-internal Presentation-Analytical-internal BAM-internal SOA-Operational-internal SOA-Analytical-internal MPS-proxy-internal CEP-Engine-internal OHS-Balancer-internal OSB-Server-internal Authentication-internal Authorization-internal-local Flexera-Server-internal vip-external 3rdparty-vip-external vip-internal MPS-proxy-external Search-internal Reporting-internal trellis-front trellis-platform
-$BACK_IP $BACK_HOST $BACK_HOST_SHORT MDS-Database-internal CDM-Database-internal TSD-Database-internal TSD-Database-external Authorization-internal-admin trellis-back
+$HOST_FRONT_IP 	$HOST_FRONT_FQDN $HOST_FRONT_NAME 
+$HOST_BACK_IP 	$HOST_BACK_FQDN $HOST_BACK_NAME
+
+$HOST_FRONT_IP 	weblogic-admin Presentation-Operational-internal Presentation-Analytical-internal BAM-internal SOA-Operational-internal SOA-Analytical-internal MPS-proxy-internal CEP-Engine-internal OHS-Balancer-internal OSB-Server-internal Authentication-internal Authorization-internal-local Flexera-Server-internal vip-external 3rdparty-vip-external vip-internal MPS-proxy-external Search-internal Reporting-internal trellis-front trellis-platform
+$HOST_BACK_IP 	MDS-Database-internal CDM-Database-internal TSD-Database-internal TSD-Database-external Authorization-internal-admin trellis-back
 EOF
 
 ##  If user asked to fix problems, will fix possible bug found with symlinks and ssl
 ##  Bug prevents the license server from working.
 # TODO: Disabel this fix
+#echo ""
+#echo "---CHECKING FOR LICENSE SERVER SYMLINKS---"
+#if [ $RELEASE = "5.9" ]; then
+#  echo "This fix not needed for version $RELEASE, moving on"
+#else
+#  echo "Creating the directory /usr/lib/licenseserver and populating it with the correct symlinks before installation"
+#  mkdir -p /usr/lib/licenseserver
+#  ln -s /usr/lib/libcrypto.so.10 /usr/lib/licenseserver/libcrypto.so.1.0.0
+#  ln -s /usr/lib/libssl.so.10 /usr/lib/licenseserver/libssl.so.1.0.0
+#  echo "Directory and symlinks created"
+#fi
+
+
+##  rngd service needs to be turned on and configured
+# TODO: Check for presence of TPM, disable if TPM is entropy source.
+# TODO: Check if physical host and make fix optional.
+# TODO: Add warning that this is an unsafe change.
 echo ""
-echo "---CHECKING FOR LICENSE SERVER SYMLINKS---"
-if [ $RELEASE = "5.9" ]; then
-  echo "This fix not needed for version $RELEASE, moving on"
+echo "---CHECKING ON RNGD CONFIGURATION---"
+if [ $RELEASE_MAJOR = '7' ]; then
+	if [ `cat /sys/devices/virtual/misc/hw_random/rng_available | wc -l` -gt 0 ]; then
+		OS_CONFIG_RNG=`cat /sys/devices/virtual/misc/hw_random/rng_available`
+		if [ `cat /sys/devices/virtual/misc/hw_random/rng_available | grep -i tpm | wc -l` -gt 0 ]; then
+			echo "[Info]: Trusted Processing Module (TPM) provides entropy, rngtools must be disabled."
+			if [ `cat /sys/devices/virtual/misc/hw_random/rng_current | grep -i tpm | wc -l` -eq 0 ]; then
+				echo "[Warning]: Current entropy source is inactive, this is likely due to conflict with rngtools."
+				echo "[Action]: Disabling rngtools..."
+				systemctl disable rngd
+				systemctl enable tcsd
+				echo "[Warning]: Host must be restarted for change to take effect due to rngtools and tcsd compatability issues."
+			else
+				echo "[Info]: Kernel is presently using TPM, no action is required."
+			fi
+		else
+			echo "[Info]: Non-Trusted Processing Module (TPM) hardware entropy source detected, this should be used."
+			systemctl enable rngd
+			systemctl disable tcsd
+		fi
+	fi
 else
-  echo "Creating the directory /usr/lib/licenseserver and populating it with the correct symlinks before installation"
-  mkdir -p /usr/lib/licenseserver
-  ln -s /usr/lib/libcrypto.so.10 /usr/lib/licenseserver/libcrypto.so.1.0.0
-  ln -s /usr/lib/libssl.so.10 /usr/lib/licenseserver/libssl.so.1.0.0
-  echo "Directory and symlinks created"
+	echo "[Error]: Unimplemented."
+	# TODO: Fix TPM detection.
+	#sed -i '/EXTRAOPTIONS/d' /etc/sysconfig/rngd
+	#echo 'EXTRAOPTIONS="-i -r /dev/urandom -o /dev/random -b"' >> /etc/sysconfig/rngd
+	#chkconfig --levels 345 rngd on
+	#RNGD_STAT=`service rngd status`
+	#if [ $RNGD_STAT = "rngd is stopped" ]; then
+	#  echo "rngd service is stopped, starting..."
+	#  service rngd start
+	#else
+	#  echo "rngd service is running as expected"
+	#fi
 fi
 
 echo""
-echo "Script run successfully, system will require a reboot before installation"
+echo "[Info]: Trellis Enterprise baseline configuraiton script has completed. Please reboot before attempting installation of Trellis Enterprise."
 
-##  rngd service needs to be turned on and configured
-echo ""
-echo "---CHECKING ON RNGD CONFIGURATION---"
-sed -i '/EXTRAOPTIONS/d' /etc/sysconfig/rngd
-echo 'EXTRAOPTIONS="-i -r /dev/urandom -o /dev/random -b"' >> /etc/sysconfig/rngd
-chkconfig --levels 345 rngd on
-RNGD_STAT=`service rngd status`
-if [ $RNGD_STAT = "rngd is stopped" ]; then
-  echo "rngd service is stopped, starting..."
-  service rngd start
-else
-  echo "rngd service is running as expected"
-fi
+popd
+
+
