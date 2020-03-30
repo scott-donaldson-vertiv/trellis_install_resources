@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ##
 #  Required
 #
@@ -9,6 +10,19 @@ compat-libcap1
 compat-libstdc++-33
 compat-libstdc++-33.i686
 coreutils
+=======
+##
+#  Required
+#
+binutils
+cloog
+compat-db
+compat-db47
+compat-libcap1
+compat-libstdc++-33
+compat-libstdc++-33.i686
+coreutils
+>>>>>>> 27ac4e669dbbf28b094e43ae66bf35e0e1031df4
 cpp
 device-mapper-multipath
 dos2unix
@@ -40,9 +54,15 @@ libsane-hpaio
 libstdc++
 libstdc++.i686
 libstdc++-devel
+<<<<<<< HEAD
 libstdc++-devel.i686
 lsof
 make
+=======
+libstdc++-devel.i686
+lsof
+make
+>>>>>>> 27ac4e669dbbf28b094e43ae66bf35e0e1031df4
 mpfr
 mtools
 openmotif
@@ -61,6 +81,7 @@ xinetd.x86_64
 xorg-xll-server-utils
 xorg-x11-utils
 
+<<<<<<< HEAD
 ##
 #  Optional Diagnostic Packages
 #
@@ -112,4 +133,57 @@ tftpserver
 vsftpd
 wpa_supplicant
 ypbind
+=======
+##
+#  Optional Diagnostic Packages
+#
+bpftool
+iptraf
+nmap
+kmod-oracleasm
+oracleasm-support
+oracle-database-preinstall-18c
+pcp-pmda-bcc
+pcp-pmda-bonding
+pcp-pmda-trace
+strace
+tuned
+tuned-utils-systemtap
+
+##
+#  Packages to Remove
+#
+aic94xxfirmware
+alsafirmware
+bind
+cronieanacron
+dhcpd
+dovecot
+httpd
+ivtvfirmware
+iwl*firmware
+iwl1000firmware
+iwl100firmware
+iwl105firmware
+iwl2000firmware
+iwl3160firmware
+iwl3945firmware
+iwl3945firmware
+iwl5150firmware
+iwl6000firmware
+iwl6000g2afirmware
+iwl6050firmware
+iwl7260firmware
+netsnmpd
+rsh
+rshserver
+rshserver
+squid
+telnet
+telnetserver
+tftpserver
+vsftpd
+wpa_supplicant
+ypbind
+>>>>>>> 27ac4e669dbbf28b094e43ae66bf35e0e1031df4
 ypserv
