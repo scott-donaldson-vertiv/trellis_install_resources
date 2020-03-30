@@ -2,7 +2,7 @@
 
 #---------------------------------------------------------------------------------------------
 #
-#      Copyright (c) 2013-2018, Avocent, Vertiv Infrastructure Ltd.
+#      Copyright (c) 2013-2020, Avocent, Vertiv Infrastructure Ltd.
 #      All rights reserved.
 #
 #      Redistribution and use in source and binary forms, with or without
@@ -36,11 +36,29 @@
 #---------------------------------------------------------------------------------------------
 # Script Name: Trellis-Prereq
 # Created: 2013/05/01
+<<<<<<< HEAD:linux/supplementary-checks.sh
+<<<<<<< HEAD:linux/supplementary-checks.sh
 # Modified: 2018/09/17
 # Author: Richard Golstein [NETPWR/AVOCENT/UK], Scott Donaldson [NETPWR/AVOCENT/UK]. Ray Daugherty (NETPWR/AVOCENT/US)
 # Company: Vertiv Infrastructure Ltd.
 # Group: Software Delovery, Services
 # Email: scott.donaldson@vertivco.com. ray.daugherty@vertivco.com
+=======
+# Modified: 2020/03/13
+# Author: Scott Donaldson [NETPWR/AVOCENT/UK], Mark Zagorski [NETPWR/AVOCENT/UK], Ray Daugherty [NETPWR/AVOCENT/US]
+# Contributors: Richard Golstein [NETPWR/AVOCENT/UK], Chris Bell [NETPWR/AVOCENT/US]
+# Company: Vertiv Infrastructure Ltd.
+# Group: Software Delovery, Services
+# Email: global.services.delivery.development@vertivco.com
+>>>>>>> 9d3f073c0926e9fa4b2383489ec79c3ed5f81518:linux/supplementary-checks.sh
+=======
+# Modified: 2020/03/13
+# Author: Scott Donaldson [NETPWR/AVOCENT/UK], Mark Zagorski [NETPWR/AVOCENT/UK], Ray Daugherty [NETPWR/AVOCENT/US]
+# Contributors: Richard Golstein [NETPWR/AVOCENT/UK], Chris Bell [NETPWR/AVOCENT/US]
+# Company: Vertiv Infrastructure Ltd.
+# Group: Software Delovery, Services
+# Email: global.services.delivery.development@vertivco.com
+>>>>>>> 27ac4e669dbbf28b094e43ae66bf35e0e1031df4:linux/supplementary-checks.sh
 #---------------------------------------------------------------------------------------------
 
 #
@@ -54,8 +72,16 @@ ENV_ORIGIN_FOLDER=`pwd`
 DD_PARAM_FLUSHED="bs=8k count=100k conv=fdatasync"
 DD_PARAM_CACHED="bs=8k count=100k"
 DD_OUTFILE="/tmp/output.img"
+<<<<<<< HEAD:linux/supplementary-checks.sh
+<<<<<<< HEAD:linux/supplementary-checks.sh
 # (30 Sep 2018 - RayD) Bump to next minor version
 SCRIPT_VERSION="3.3.1"
+=======
+SCRIPT_VERSION="3.4.1"
+>>>>>>> 9d3f073c0926e9fa4b2383489ec79c3ed5f81518:linux/supplementary-checks.sh
+=======
+SCRIPT_VERSION="3.4.1"
+>>>>>>> 27ac4e669dbbf28b094e43ae66bf35e0e1031df4:linux/supplementary-checks.sh
 
 CFG_OUTPUT_FOLDER="~${ENV_REAL_USER}"
 CFG_OUTPUT_TMP_FOLDER="/tmp"
@@ -527,7 +553,7 @@ CUR_DATE=`date`
 echo
 echo "###############################################################################"
 echo "#"
-echo "#       Trellis 3.x Pre-Install Report (Version: $SCRIPT_VERSION)"
+echo "#       Trellis 5.x Pre-Install Report (Version: $SCRIPT_VERSION)"
 echo "#"
 echo "###############################################################################"
 if [ $TRELLIS_NEW_INSTALL = "No" ]; then
@@ -633,6 +659,14 @@ echo -e '#######################################################################
 # Operating System Specifical Variables
 #
 # (9 Oct 2018 - RayD) Add TIMEZONE_CMD to each OS for use in test 5.8.  
+<<<<<<< HEAD:linux/supplementary-checks.sh
+<<<<<<< HEAD:linux/supplementary-checks.sh
+=======
+# (13 March 2019 - MarkZ) Added additional packages for 7.x and set handling for 7.4,7.5,7.6,7.7 to check the updated package list.
+>>>>>>> 9d3f073c0926e9fa4b2383489ec79c3ed5f81518:linux/supplementary-checks.sh
+=======
+# (13 March 2019 - MarkZ) Added additional packages for 7.x and set handling for 7.4,7.5,7.6,7.7 to check the updated package list.
+>>>>>>> 27ac4e669dbbf28b094e43ae66bf35e0e1031df4:linux/supplementary-checks.sh
 if [ "$RELEASE" == "5.9" ]; then
   IPTABLES_RESULT="Firewall is stopped."
   REQ_1_59_PACKAGES="kexec-tools fipscheck device-mapper-multipath sgpio emacs libsane-hpaio xorg-x11-utils xorg-x11-server-Xnest binutils compat-db compat-libstdc++-33 elfutils-libelf elfutils-libelf-devel gcc gcc-c++ glibc glibc-common glibc-devel libaio libaio-devel libgcc libstdc++ libstdc++-devel make openmotif screen sysstat unixODBC unixODBC-devel glibc-devel.i386 java-1.6.0-openjdk"
@@ -663,20 +697,46 @@ elif [ "$RELEASE" == "6.5" ] || [ "$RELEASE" == "6.6" ] || [ "$RELEASE" == "6.7"
   TIMEZONE_LIST="Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmara Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Africa/Brazzaville Africa/Bujumbura Africa/Cairo Africa/Casablanca Africa/Ceuta Africa/Conakry Africa/Dakar Africa/Dar_es_Salaam Africa/Djibouti Africa/Douala Africa/El_Aaiun Africa/Freetown Africa/Gaborone Africa/Harare Africa/Johannesburg Africa/Kampala Africa/Khartoum Africa/Kigali Africa/Kinshasa Africa/Lagos Africa/Libreville Africa/Lome Africa/Luanda Africa/Lubumbashi Africa/Lusaka Africa/Malabo Africa/Maputo Africa/Maseru Africa/Mbabane Africa/Mogadishu Africa/Monrovia Africa/Nairobi Africa/Ndjamena Africa/Niamey Africa/Nouakchott Africa/Ouagadougou Africa/Porto-Novo Africa/Sao_Tome Africa/Timbuktu Africa/Tripoli Africa/Tunis Africa/Windhoek America/Adak America/Anchorage America/Anguilla America/Antigua America/Araguaina America/Argentina/Buenos_Aires America/Argentina/Catamarca America/Argentina/ComodRivadavia America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/La_Rioja America/Argentina/Mendoza America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Aruba America/Asuncion America/Atikokan America/Atka America/Bahia America/Barbados America/Belem America/Belize America/Blanc-Sablon America/Boa_Vista America/Bogota America/Boise America/Buenos_Aires America/Cambridge_Bay America/Campo_Grande America/Cancun America/Caracas America/Catamarca America/Cayenne America/Cayman America/Chicago America/Chihuahua America/Coral_Harbour America/Cordoba America/Costa_Rica America/Cuiaba America/Curacao America/Danmarkshavn America/Dawson America/Dawson_Creek America/Denver America/Detroit America/Dominica America/Edmonton America/Eirunepe America/El_Salvador America/Ensenada America/Fort_Wayne America/Fortaleza America/Glace_Bay America/Godthab America/Goose_Bay America/Grand_Turk America/Grenada America/Guadeloupe America/Guatemala America/Guayaquil America/Guyana America/Halifax America/Havana America/Hermosillo America/Indiana/Indianapolis America/Indiana/Knox America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Tell_City America/Indiana/Vevay America/Indiana/Vincennes America/Indiana/Winamac America/Indianapolis America/Inuvik America/Iqaluit America/Jamaica America/Jujuy America/Juneau America/Kentucky/Louisville America/Kentucky/Monticello America/Knox_IN America/La_Paz America/Lima America/Los_Angeles America/Louisville America/Maceio America/Managua America/Manaus America/Marigot America/Martinique America/Mazatlan America/Mendoza America/Menominee America/Merida America/Mexico_City America/Miquelon America/Moncton America/Monterrey America/Montevideo America/Montreal America/Montserrat America/Nassau America/New_York America/Nipigon America/Nome America/Noronha America/North_Dakota/Center America/North_Dakota/New_Salem America/Panama America/Pangnirtung America/Paramaribo America/Phoenix America/Port_of_Spain America/Port-au-Prince America/Porto_Acre America/Porto_Velho America/Puerto_Rico America/Rainy_River America/Rankin_Inlet America/Recife America/Regina America/Resolute America/Rio_Branco America/Rosario America/Santiago America/Santo_Domingo America/Sao_Paulo America/Scoresbysund America/Shiprock America/St_Barthelemy America/St_Johns America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Swift_Current America/Tegucigalpa America/Thule America/Thunder_Bay America/Tijuana America/Toronto America/Tortola America/Vancouver America/Virgin America/Whitehorse America/Winnipeg America/Yakutat America/Yellowknife Antarctica/Casey Antarctica/Davis Antarctica/DumontDUrville Antarctica/Mawson Antarctica/McMurdo Antarctica/Palmer Antarctica/South_Pole Antarctica/Syowa Arctic/Longyearbyen Asia/Aden Asia/Almaty Asia/Amman Asia/Anadyr Asia/Aqtau Asia/Aqtobe Asia/Ashgabat Asia/Ashkhabad Asia/Baghdad Asia/Bahrain Asia/Baku Asia/Bangkok Asia/Beirut Asia/Bishkek Asia/Brunei Asia/Calcutta Asia/Choibalsan Asia/Chongqing Asia/Chungking Asia/Colombo Asia/Dacca Asia/Damascus Asia/Dhaka Asia/Dili Asia/Dubai Asia/Dushanbe Asia/Gaza Asia/Harbin Asia/Ho_Chi_Minh Asia/Hong_Kong Asia/Hovd Asia/Irkutsk Asia/Istanbul Asia/Jakarta Asia/Jayapura Asia/Jerusalem Asia/Kabul Asia/Kamchatka Asia/Karachi Asia/Kashgar Asia/Kathmandu Asia/Katmandu Asia/Kolkata Asia/Krasnoyarsk Asia/Kuala_Lumpur Asia/Kuching Asia/Kuwait Asia/Macao Asia/Macau Asia/Magadan Asia/Makassar Asia/Manila Asia/Muscat Asia/Nicosia Asia/Novosibirsk Asia/Omsk Asia/Oral Asia/Phnom_Penh Asia/Pontianak Asia/Pyongyang Asia/Qatar Asia/Qyzylorda Asia/Rangoon Asia/Riyadh Asia/Saigon Asia/Sakhalin Asia/Samarkand Asia/Seoul Asia/Shanghai Asia/Singapore Asia/Taipei Asia/Tashkent Asia/Tbilisi Asia/Tehran Asia/Tel_Aviv Asia/Thimbu Asia/Thimphu Asia/Tokyo Asia/Ujung_Pandang Asia/Ulaanbaatar Asia/Ulan_Bator Asia/Urumqi Asia/Vientiane Asia/Vladivostok Asia/Yakutsk Asia/Yekaterinburg Asia/Yerevan Atlantic/Azores Atlantic/Bermuda Atlantic/Canary Atlantic/Cape_Verde Atlantic/Faeroe Atlantic/Faroe Atlantic/Jan_Mayen Atlantic/Madeira Atlantic/Reykjavik Atlantic/South_Georgia Atlantic/St_Helena Atlantic/Stanley Australia/ACT Australia/Adelaide Australia/Brisbane Australia/Broken_Hill Australia/Canberra Australia/Currie Australia/Darwin Australia/Eucla Australia/Hobart Australia/LHI Australia/Lindeman Australia/Lord_Howe Australia/Melbourne Australia/North Australia/NSW Australia/Perth Australia/Queensland Australia/South Australia/Sydney Australia/Tasmania Australia/Victoria Australia/West Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West Canada/Atlantic Canada/Central Canada/Eastern Canada/East-Saskatchewan Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Saskatchewan Canada/Yukon CET Chile/Continental Chile/EasterIsland CST CST6CDT Cuba EET Egypt Eire EST EST5EDT Etc/GMT Etc/GMT+0 Etc/GMT+1 Etc/GMT+10 Etc/GMT+11 Etc/GMT+12 Etc/GMT+2 Etc/GMT+3 Etc/GMT+4 Etc/GMT+5 Etc/GMT+6 Etc/GMT+7 Etc/GMT+8 Etc/GMT+9 Etc/GMT0 Etc/GMT-0 Etc/GMT-1 Etc/GMT-10 Etc/GMT-11 Etc/GMT-12 Etc/GMT-13 Etc/GMT-14 Etc/GMT-2 Etc/GMT-3 Etc/GMT-4 Etc/GMT-5 Etc/GMT-6 Etc/GMT-7 Etc/GMT-8 Etc/GMT-9 Etc/Greenwich Europe/Amsterdam Europe/Andorra Europe/Athens Europe/Belfast Europe/Belgrade Europe/Berlin Europe/Bratislava Europe/Brussels Europe/Bucharest Europe/Budapest Europe/Chisinau Europe/Copenhagen Europe/Dublin Europe/Gibraltar Europe/Guernsey Europe/Helsinki Europe/Isle_of_Man Europe/Istanbul Europe/Jersey Europe/Kaliningrad Europe/Kiev Europe/Lisbon Europe/Ljubljana Europe/London Europe/Luxembourg Europe/Madrid Europe/Malta Europe/Mariehamn Europe/Minsk Europe/Monaco Europe/Moscow Europe/Nicosia Europe/Oslo Europe/Paris Europe/Prague Europe/Riga Europe/Rome Europe/Samara Europe/San_Marino Europe/Sarajevo Europe/Simferopol Europe/Skopje Europe/Sofia Europe/Stockholm Europe/Tallinn Europe/Tirane Europe/Tiraspol Europe/Uzhgorod Europe/Vaduz Europe/Vatican Europe/Vienna Europe/Vilnius Europe/Volgograd Europe/Warsaw Europe/Zagreb Europe/Zaporozhye Europe/Zurich GB GB-Eire GMT GMT+0 GMT0 GMT-0 Greenwich Hongkong HST Iceland Indian/Antananarivo Indian/Chagos Indian/Christmas Indian/Cocos Indian/Comoro Indian/Kerguelen Indian/Mahe Indian/Maldives Indian/Mauritius Indian/Mayotte Indian/Reunion Iran Israel Jamaica Japan Kwajalein Libya MET Mexico/BajaNorte Mexico/BajaSur Mexico/General MST MST7MDT Navajo NZ NZ-CHAT Pacific/Apia Pacific/Auckland Pacific/Chatham Pacific/Easter Pacific/Efate Pacific/Enderbury Pacific/Fakaofo Pacific/Fiji Pacific/Funafuti Pacific/Galapagos Pacific/Gambier Pacific/Guadalcanal Pacific/Guam Pacific/Honolulu Pacific/Johnston Pacific/Kiritimati Pacific/Kosrae Pacific/Kwajalein Pacific/Majuro Pacific/Marquesas Pacific/Midway Pacific/Nauru Pacific/Niue Pacific/Norfolk Pacific/Noumea Pacific/Pago_Pago Pacific/Palau Pacific/Pitcairn Pacific/Ponape Pacific/Port_Moresby Pacific/Rarotonga Pacific/Saipan Pacific/Samoa Pacific/Tahiti Pacific/Tarawa Pacific/Tongatapu Pacific/Truk Pacific/Wake Pacific/Wallis Pacific/Yap Poland Portugal PRC PST PST8PDT ROC ROK Singapore Turkey US/Alaska US/Aleutian US/Arizona US/Central US/Eastern US/East-Indiana US/Hawaii US/Indiana-Starke US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa UTC WET W-SU"
   TIMEZONE_CMD="cat /etc/sysconfig/clock | grep ZONE | cut -f2 -d '=' | sed 's/[\"]//g'"
 # (30 Sep 2018 - RayD) Updated the list of packages
+<<<<<<< HEAD:linux/supplementary-checks.sh
+<<<<<<< HEAD:linux/supplementary-checks.sh
 elif [ "$RELEASE" == "7.3" ] || [ "$RELEASE" == "7.4" ]; then
   # TODO: #STB-6
   IPTABLES_RESULT="iptables: Firewall is not running."
   # TODO: #STB-4
   REQ_1_59_PACKAGES="binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts iptraf kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 make mtools nmap openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio strace sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-xll-server-utils xorg-x11-utils"
+=======
+# (13 March 2020 - MarkZ) Updated list of packages to include coob et al plus modified logic to include RHEL 7.5-7.7
+elif [ "$RELEASE" == "7.3" ] || [ "$RELEASE" == "7.4" ] || [ "$RELEASE" == "7.5" ] || [ "$RELEASE" == "7.6" ] || [ "$RELEASE" == "7.7" ]; then
+  # TODO: #STB-6
+  IPTABLES_RESULT="iptables: Firewall is not running."
+  # TODO: #STB-4
+  REQ_1_59_PACKAGES="binutils cloog compat-db compat-db47 compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 coreutils cpp device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 lsof make mpfr mtools openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-xll-server-utils xorg-x11-utils"
+>>>>>>> 9d3f073c0926e9fa4b2383489ec79c3ed5f81518:linux/supplementary-checks.sh
+=======
+# (13 March 2020 - MarkZ) Updated list of packages to include coob et al plus modified logic to include RHEL 7.5-7.7
+elif [ "$RELEASE" == "7.3" ] || [ "$RELEASE" == "7.4" ] || [ "$RELEASE" == "7.5" ] || [ "$RELEASE" == "7.6" ] || [ "$RELEASE" == "7.7" ]; then
+  # TODO: #STB-6
+  IPTABLES_RESULT="iptables: Firewall is not running."
+  # TODO: #STB-4
+  REQ_1_59_PACKAGES="binutils cloog compat-db compat-db47 compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 coreutils cpp device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 lsof make mpfr mtools openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-xll-server-utils xorg-x11-utils"
+>>>>>>> 27ac4e669dbbf28b094e43ae66bf35e0e1031df4:linux/supplementary-checks.sh
   ENTROPY="rngd -r /dev/urandom -o /dev/random"
   ENTROPY_EXTRAOPTIONS="/sbin/rngd -f -r /dev/urandom -o /dev/random"  
   TIMEZONE_LIST="Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmara Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Africa/Brazzaville Africa/Bujumbura Africa/Cairo Africa/Casablanca Africa/Ceuta Africa/Conakry Africa/Dakar Africa/Dar_es_Salaam Africa/Djibouti Africa/Douala Africa/El_Aaiun Africa/Freetown Africa/Gaborone Africa/Harare Africa/Johannesburg Africa/Kampala Africa/Khartoum Africa/Kigali Africa/Kinshasa Africa/Lagos Africa/Libreville Africa/Lome Africa/Luanda Africa/Lubumbashi Africa/Lusaka Africa/Malabo Africa/Maputo Africa/Maseru Africa/Mbabane Africa/Mogadishu Africa/Monrovia Africa/Nairobi Africa/Ndjamena Africa/Niamey Africa/Nouakchott Africa/Ouagadougou Africa/Porto-Novo Africa/Sao_Tome Africa/Timbuktu Africa/Tripoli Africa/Tunis Africa/Windhoek America/Adak America/Anchorage America/Anguilla America/Antigua America/Araguaina America/Argentina/Buenos_Aires America/Argentina/Catamarca America/Argentina/ComodRivadavia America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/La_Rioja America/Argentina/Mendoza America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Aruba America/Asuncion America/Atikokan America/Atka America/Bahia America/Barbados America/Belem America/Belize America/Blanc-Sablon America/Boa_Vista America/Bogota America/Boise America/Buenos_Aires America/Cambridge_Bay America/Campo_Grande America/Cancun America/Caracas America/Catamarca America/Cayenne America/Cayman America/Chicago America/Chihuahua America/Coral_Harbour America/Cordoba America/Costa_Rica America/Cuiaba America/Curacao America/Danmarkshavn America/Dawson America/Dawson_Creek America/Denver America/Detroit America/Dominica America/Edmonton America/Eirunepe America/El_Salvador America/Ensenada America/Fort_Wayne America/Fortaleza America/Glace_Bay America/Godthab America/Goose_Bay America/Grand_Turk America/Grenada America/Guadeloupe America/Guatemala America/Guayaquil America/Guyana America/Halifax America/Havana America/Hermosillo America/Indiana/Indianapolis America/Indiana/Knox America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Tell_City America/Indiana/Vevay America/Indiana/Vincennes America/Indiana/Winamac America/Indianapolis America/Inuvik America/Iqaluit America/Jamaica America/Jujuy America/Juneau America/Kentucky/Louisville America/Kentucky/Monticello America/Knox_IN America/La_Paz America/Lima America/Los_Angeles America/Louisville America/Maceio America/Managua America/Manaus America/Marigot America/Martinique America/Mazatlan America/Mendoza America/Menominee America/Merida America/Mexico_City America/Miquelon America/Moncton America/Monterrey America/Montevideo America/Montreal America/Montserrat America/Nassau America/New_York America/Nipigon America/Nome America/Noronha America/North_Dakota/Center America/North_Dakota/New_Salem America/Panama America/Pangnirtung America/Paramaribo America/Phoenix America/Port_of_Spain America/Port-au-Prince America/Porto_Acre America/Porto_Velho America/Puerto_Rico America/Rainy_River America/Rankin_Inlet America/Recife America/Regina America/Resolute America/Rio_Branco America/Rosario America/Santiago America/Santo_Domingo America/Sao_Paulo America/Scoresbysund America/Shiprock America/St_Barthelemy America/St_Johns America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Swift_Current America/Tegucigalpa America/Thule America/Thunder_Bay America/Tijuana America/Toronto America/Tortola America/Vancouver America/Virgin America/Whitehorse America/Winnipeg America/Yakutat America/Yellowknife Antarctica/Casey Antarctica/Davis Antarctica/DumontDUrville Antarctica/Mawson Antarctica/McMurdo Antarctica/Palmer Antarctica/South_Pole Antarctica/Syowa Arctic/Longyearbyen Asia/Aden Asia/Almaty Asia/Amman Asia/Anadyr Asia/Aqtau Asia/Aqtobe Asia/Ashgabat Asia/Ashkhabad Asia/Baghdad Asia/Bahrain Asia/Baku Asia/Bangkok Asia/Beirut Asia/Bishkek Asia/Brunei Asia/Calcutta Asia/Choibalsan Asia/Chongqing Asia/Chungking Asia/Colombo Asia/Dacca Asia/Damascus Asia/Dhaka Asia/Dili Asia/Dubai Asia/Dushanbe Asia/Gaza Asia/Harbin Asia/Ho_Chi_Minh Asia/Hong_Kong Asia/Hovd Asia/Irkutsk Asia/Istanbul Asia/Jakarta Asia/Jayapura Asia/Jerusalem Asia/Kabul Asia/Kamchatka Asia/Karachi Asia/Kashgar Asia/Kathmandu Asia/Katmandu Asia/Kolkata Asia/Krasnoyarsk Asia/Kuala_Lumpur Asia/Kuching Asia/Kuwait Asia/Macao Asia/Macau Asia/Magadan Asia/Makassar Asia/Manila Asia/Muscat Asia/Nicosia Asia/Novosibirsk Asia/Omsk Asia/Oral Asia/Phnom_Penh Asia/Pontianak Asia/Pyongyang Asia/Qatar Asia/Qyzylorda Asia/Rangoon Asia/Riyadh Asia/Saigon Asia/Sakhalin Asia/Samarkand Asia/Seoul Asia/Shanghai Asia/Singapore Asia/Taipei Asia/Tashkent Asia/Tbilisi Asia/Tehran Asia/Tel_Aviv Asia/Thimbu Asia/Thimphu Asia/Tokyo Asia/Ujung_Pandang Asia/Ulaanbaatar Asia/Ulan_Bator Asia/Urumqi Asia/Vientiane Asia/Vladivostok Asia/Yakutsk Asia/Yekaterinburg Asia/Yerevan Atlantic/Azores Atlantic/Bermuda Atlantic/Canary Atlantic/Cape_Verde Atlantic/Faeroe Atlantic/Faroe Atlantic/Jan_Mayen Atlantic/Madeira Atlantic/Reykjavik Atlantic/South_Georgia Atlantic/St_Helena Atlantic/Stanley Australia/ACT Australia/Adelaide Australia/Brisbane Australia/Broken_Hill Australia/Canberra Australia/Currie Australia/Darwin Australia/Eucla Australia/Hobart Australia/LHI Australia/Lindeman Australia/Lord_Howe Australia/Melbourne Australia/North Australia/NSW Australia/Perth Australia/Queensland Australia/South Australia/Sydney Australia/Tasmania Australia/Victoria Australia/West Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West Canada/Atlantic Canada/Central Canada/Eastern Canada/East-Saskatchewan Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Saskatchewan Canada/Yukon CET Chile/Continental Chile/EasterIsland CST CST6CDT Cuba EET Egypt Eire EST EST5EDT Etc/GMT Etc/GMT+0 Etc/GMT+1 Etc/GMT+10 Etc/GMT+11 Etc/GMT+12 Etc/GMT+2 Etc/GMT+3 Etc/GMT+4 Etc/GMT+5 Etc/GMT+6 Etc/GMT+7 Etc/GMT+8 Etc/GMT+9 Etc/GMT0 Etc/GMT-0 Etc/GMT-1 Etc/GMT-10 Etc/GMT-11 Etc/GMT-12 Etc/GMT-13 Etc/GMT-14 Etc/GMT-2 Etc/GMT-3 Etc/GMT-4 Etc/GMT-5 Etc/GMT-6 Etc/GMT-7 Etc/GMT-8 Etc/GMT-9 Etc/Greenwich Europe/Amsterdam Europe/Andorra Europe/Athens Europe/Belfast Europe/Belgrade Europe/Berlin Europe/Bratislava Europe/Brussels Europe/Bucharest Europe/Budapest Europe/Chisinau Europe/Copenhagen Europe/Dublin Europe/Gibraltar Europe/Guernsey Europe/Helsinki Europe/Isle_of_Man Europe/Istanbul Europe/Jersey Europe/Kaliningrad Europe/Kiev Europe/Lisbon Europe/Ljubljana Europe/London Europe/Luxembourg Europe/Madrid Europe/Malta Europe/Mariehamn Europe/Minsk Europe/Monaco Europe/Moscow Europe/Nicosia Europe/Oslo Europe/Paris Europe/Prague Europe/Riga Europe/Rome Europe/Samara Europe/San_Marino Europe/Sarajevo Europe/Simferopol Europe/Skopje Europe/Sofia Europe/Stockholm Europe/Tallinn Europe/Tirane Europe/Tiraspol Europe/Uzhgorod Europe/Vaduz Europe/Vatican Europe/Vienna Europe/Vilnius Europe/Volgograd Europe/Warsaw Europe/Zagreb Europe/Zaporozhye Europe/Zurich GB GB-Eire GMT GMT+0 GMT0 GMT-0 Greenwich Hongkong HST Iceland Indian/Antananarivo Indian/Chagos Indian/Christmas Indian/Cocos Indian/Comoro Indian/Kerguelen Indian/Mahe Indian/Maldives Indian/Mauritius Indian/Mayotte Indian/Reunion Iran Israel Jamaica Japan Kwajalein Libya MET Mexico/BajaNorte Mexico/BajaSur Mexico/General MST MST7MDT Navajo NZ NZ-CHAT Pacific/Apia Pacific/Auckland Pacific/Chatham Pacific/Easter Pacific/Efate Pacific/Enderbury Pacific/Fakaofo Pacific/Fiji Pacific/Funafuti Pacific/Galapagos Pacific/Gambier Pacific/Guadalcanal Pacific/Guam Pacific/Honolulu Pacific/Johnston Pacific/Kiritimati Pacific/Kosrae Pacific/Kwajalein Pacific/Majuro Pacific/Marquesas Pacific/Midway Pacific/Nauru Pacific/Niue Pacific/Norfolk Pacific/Noumea Pacific/Pago_Pago Pacific/Palau Pacific/Pitcairn Pacific/Ponape Pacific/Port_Moresby Pacific/Rarotonga Pacific/Saipan Pacific/Samoa Pacific/Tahiti Pacific/Tarawa Pacific/Tongatapu Pacific/Truk Pacific/Wake Pacific/Wallis Pacific/Yap Poland Portugal PRC PST PST8PDT ROC ROK Singapore Turkey US/Alaska US/Aleutian US/Arizona US/Central US/Eastern US/East-Indiana US/Hawaii US/Indiana-Starke US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa UTC WET W-SU"
   TIMEZONE_CMD="timedatectl | grep 'Time zone' | awk '{print $3}'"
 else
+<<<<<<< HEAD:linux/supplementary-checks.sh
+<<<<<<< HEAD:linux/supplementary-checks.sh
   echo '[Warning]: RHEL Version not matched, tests will be against 6.8.'
+=======
+  echo '[Warning]: RHEL Version not matched, tests will be against 7.6.'
+>>>>>>> 9d3f073c0926e9fa4b2383489ec79c3ed5f81518:linux/supplementary-checks.sh
+=======
+  echo '[Warning]: RHEL Version not matched, tests will be against 7.6.'
+>>>>>>> 27ac4e669dbbf28b094e43ae66bf35e0e1031df4:linux/supplementary-checks.sh
   RELEASE="6.8"
   IPTABLES_RESULT="iptables: Firewall is not running."
-  REQ_1_59_PACKAGES="zlib zlib.i686 binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl openssl.i686 redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk java-1.7.0-openjdk"
+  REQ_1_59_PACKAGES="binutils cloog compat-db compat-db47 compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 coreutils cpp device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 lsof make mpfr mtools openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-xll-server-utils xorg-x11-utils"
   ENTROPY="rngd -r /dev/urandom -o /dev/random -t 0.01"
   ENTROPY_EXTRAOPTIONS=" -r /dev/urandom -o /dev/random -b"  
   TIMEZONE_LIST="Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmara Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Africa/Brazzaville Africa/Bujumbura Africa/Cairo Africa/Casablanca Africa/Ceuta Africa/Conakry Africa/Dakar Africa/Dar_es_Salaam Africa/Djibouti Africa/Douala Africa/El_Aaiun Africa/Freetown Africa/Gaborone Africa/Harare Africa/Johannesburg Africa/Kampala Africa/Khartoum Africa/Kigali Africa/Kinshasa Africa/Lagos Africa/Libreville Africa/Lome Africa/Luanda Africa/Lubumbashi Africa/Lusaka Africa/Malabo Africa/Maputo Africa/Maseru Africa/Mbabane Africa/Mogadishu Africa/Monrovia Africa/Nairobi Africa/Ndjamena Africa/Niamey Africa/Nouakchott Africa/Ouagadougou Africa/Porto-Novo Africa/Sao_Tome Africa/Timbuktu Africa/Tripoli Africa/Tunis Africa/Windhoek America/Adak America/Anchorage America/Anguilla America/Antigua America/Araguaina America/Argentina/Buenos_Aires America/Argentina/Catamarca America/Argentina/ComodRivadavia America/Argentina/Cordoba America/Argentina/Jujuy America/Argentina/La_Rioja America/Argentina/Mendoza America/Argentina/Rio_Gallegos America/Argentina/Salta America/Argentina/San_Juan America/Argentina/San_Luis America/Argentina/Tucuman America/Argentina/Ushuaia America/Aruba America/Asuncion America/Atikokan America/Atka America/Bahia America/Barbados America/Belem America/Belize America/Blanc-Sablon America/Boa_Vista America/Bogota America/Boise America/Buenos_Aires America/Cambridge_Bay America/Campo_Grande America/Cancun America/Caracas America/Catamarca America/Cayenne America/Cayman America/Chicago America/Chihuahua America/Coral_Harbour America/Cordoba America/Costa_Rica America/Cuiaba America/Curacao America/Danmarkshavn America/Dawson America/Dawson_Creek America/Denver America/Detroit America/Dominica America/Edmonton America/Eirunepe America/El_Salvador America/Ensenada America/Fort_Wayne America/Fortaleza America/Glace_Bay America/Godthab America/Goose_Bay America/Grand_Turk America/Grenada America/Guadeloupe America/Guatemala America/Guayaquil America/Guyana America/Halifax America/Havana America/Hermosillo America/Indiana/Indianapolis America/Indiana/Knox America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Tell_City America/Indiana/Vevay America/Indiana/Vincennes America/Indiana/Winamac America/Indianapolis America/Inuvik America/Iqaluit America/Jamaica America/Jujuy America/Juneau America/Kentucky/Louisville America/Kentucky/Monticello America/Knox_IN America/La_Paz America/Lima America/Los_Angeles America/Louisville America/Maceio America/Managua America/Manaus America/Marigot America/Martinique America/Mazatlan America/Mendoza America/Menominee America/Merida America/Mexico_City America/Miquelon America/Moncton America/Monterrey America/Montevideo America/Montreal America/Montserrat America/Nassau America/New_York America/Nipigon America/Nome America/Noronha America/North_Dakota/Center America/North_Dakota/New_Salem America/Panama America/Pangnirtung America/Paramaribo America/Phoenix America/Port_of_Spain America/Port-au-Prince America/Porto_Acre America/Porto_Velho America/Puerto_Rico America/Rainy_River America/Rankin_Inlet America/Recife America/Regina America/Resolute America/Rio_Branco America/Rosario America/Santiago America/Santo_Domingo America/Sao_Paulo America/Scoresbysund America/Shiprock America/St_Barthelemy America/St_Johns America/St_Kitts America/St_Lucia America/St_Thomas America/St_Vincent America/Swift_Current America/Tegucigalpa America/Thule America/Thunder_Bay America/Tijuana America/Toronto America/Tortola America/Vancouver America/Virgin America/Whitehorse America/Winnipeg America/Yakutat America/Yellowknife Antarctica/Casey Antarctica/Davis Antarctica/DumontDUrville Antarctica/Mawson Antarctica/McMurdo Antarctica/Palmer Antarctica/South_Pole Antarctica/Syowa Arctic/Longyearbyen Asia/Aden Asia/Almaty Asia/Amman Asia/Anadyr Asia/Aqtau Asia/Aqtobe Asia/Ashgabat Asia/Ashkhabad Asia/Baghdad Asia/Bahrain Asia/Baku Asia/Bangkok Asia/Beirut Asia/Bishkek Asia/Brunei Asia/Calcutta Asia/Choibalsan Asia/Chongqing Asia/Chungking Asia/Colombo Asia/Dacca Asia/Damascus Asia/Dhaka Asia/Dili Asia/Dubai Asia/Dushanbe Asia/Gaza Asia/Harbin Asia/Ho_Chi_Minh Asia/Hong_Kong Asia/Hovd Asia/Irkutsk Asia/Istanbul Asia/Jakarta Asia/Jayapura Asia/Jerusalem Asia/Kabul Asia/Kamchatka Asia/Karachi Asia/Kashgar Asia/Kathmandu Asia/Katmandu Asia/Kolkata Asia/Krasnoyarsk Asia/Kuala_Lumpur Asia/Kuching Asia/Kuwait Asia/Macao Asia/Macau Asia/Magadan Asia/Makassar Asia/Manila Asia/Muscat Asia/Nicosia Asia/Novosibirsk Asia/Omsk Asia/Oral Asia/Phnom_Penh Asia/Pontianak Asia/Pyongyang Asia/Qatar Asia/Qyzylorda Asia/Rangoon Asia/Riyadh Asia/Saigon Asia/Sakhalin Asia/Samarkand Asia/Seoul Asia/Shanghai Asia/Singapore Asia/Taipei Asia/Tashkent Asia/Tbilisi Asia/Tehran Asia/Tel_Aviv Asia/Thimbu Asia/Thimphu Asia/Tokyo Asia/Ujung_Pandang Asia/Ulaanbaatar Asia/Ulan_Bator Asia/Urumqi Asia/Vientiane Asia/Vladivostok Asia/Yakutsk Asia/Yekaterinburg Asia/Yerevan Atlantic/Azores Atlantic/Bermuda Atlantic/Canary Atlantic/Cape_Verde Atlantic/Faeroe Atlantic/Faroe Atlantic/Jan_Mayen Atlantic/Madeira Atlantic/Reykjavik Atlantic/South_Georgia Atlantic/St_Helena Atlantic/Stanley Australia/ACT Australia/Adelaide Australia/Brisbane Australia/Broken_Hill Australia/Canberra Australia/Currie Australia/Darwin Australia/Eucla Australia/Hobart Australia/LHI Australia/Lindeman Australia/Lord_Howe Australia/Melbourne Australia/North Australia/NSW Australia/Perth Australia/Queensland Australia/South Australia/Sydney Australia/Tasmania Australia/Victoria Australia/West Australia/Yancowinna Brazil/Acre Brazil/DeNoronha Brazil/East Brazil/West Canada/Atlantic Canada/Central Canada/Eastern Canada/East-Saskatchewan Canada/Mountain Canada/Newfoundland Canada/Pacific Canada/Saskatchewan Canada/Yukon CET Chile/Continental Chile/EasterIsland CST CST6CDT Cuba EET Egypt Eire EST EST5EDT Etc/GMT Etc/GMT+0 Etc/GMT+1 Etc/GMT+10 Etc/GMT+11 Etc/GMT+12 Etc/GMT+2 Etc/GMT+3 Etc/GMT+4 Etc/GMT+5 Etc/GMT+6 Etc/GMT+7 Etc/GMT+8 Etc/GMT+9 Etc/GMT0 Etc/GMT-0 Etc/GMT-1 Etc/GMT-10 Etc/GMT-11 Etc/GMT-12 Etc/GMT-13 Etc/GMT-14 Etc/GMT-2 Etc/GMT-3 Etc/GMT-4 Etc/GMT-5 Etc/GMT-6 Etc/GMT-7 Etc/GMT-8 Etc/GMT-9 Etc/Greenwich Europe/Amsterdam Europe/Andorra Europe/Athens Europe/Belfast Europe/Belgrade Europe/Berlin Europe/Bratislava Europe/Brussels Europe/Bucharest Europe/Budapest Europe/Chisinau Europe/Copenhagen Europe/Dublin Europe/Gibraltar Europe/Guernsey Europe/Helsinki Europe/Isle_of_Man Europe/Istanbul Europe/Jersey Europe/Kaliningrad Europe/Kiev Europe/Lisbon Europe/Ljubljana Europe/London Europe/Luxembourg Europe/Madrid Europe/Malta Europe/Mariehamn Europe/Minsk Europe/Monaco Europe/Moscow Europe/Nicosia Europe/Oslo Europe/Paris Europe/Prague Europe/Riga Europe/Rome Europe/Samara Europe/San_Marino Europe/Sarajevo Europe/Simferopol Europe/Skopje Europe/Sofia Europe/Stockholm Europe/Tallinn Europe/Tirane Europe/Tiraspol Europe/Uzhgorod Europe/Vaduz Europe/Vatican Europe/Vienna Europe/Vilnius Europe/Volgograd Europe/Warsaw Europe/Zagreb Europe/Zaporozhye Europe/Zurich GB GB-Eire GMT GMT+0 GMT0 GMT-0 Greenwich Hongkong HST Iceland Indian/Antananarivo Indian/Chagos Indian/Christmas Indian/Cocos Indian/Comoro Indian/Kerguelen Indian/Mahe Indian/Maldives Indian/Mauritius Indian/Mayotte Indian/Reunion Iran Israel Jamaica Japan Kwajalein Libya MET Mexico/BajaNorte Mexico/BajaSur Mexico/General MST MST7MDT Navajo NZ NZ-CHAT Pacific/Apia Pacific/Auckland Pacific/Chatham Pacific/Easter Pacific/Efate Pacific/Enderbury Pacific/Fakaofo Pacific/Fiji Pacific/Funafuti Pacific/Galapagos Pacific/Gambier Pacific/Guadalcanal Pacific/Guam Pacific/Honolulu Pacific/Johnston Pacific/Kiritimati Pacific/Kosrae Pacific/Kwajalein Pacific/Majuro Pacific/Marquesas Pacific/Midway Pacific/Nauru Pacific/Niue Pacific/Norfolk Pacific/Noumea Pacific/Pago_Pago Pacific/Palau Pacific/Pitcairn Pacific/Ponape Pacific/Port_Moresby Pacific/Rarotonga Pacific/Saipan Pacific/Samoa Pacific/Tahiti Pacific/Tarawa Pacific/Tongatapu Pacific/Truk Pacific/Wake Pacific/Wallis Pacific/Yap Poland Portugal PRC PST PST8PDT ROC ROK Singapore Turkey US/Alaska US/Aleutian US/Arizona US/Central US/Eastern US/East-Indiana US/Hawaii US/Indiana-Starke US/Michigan US/Mountain US/Pacific US/Pacific-New US/Samoa UTC WET W-SU"
@@ -2102,7 +2162,7 @@ else
     echo -e "\t\t\t${YELLOW}N/A${NONE}" > `tty`
 fi
 
-echo '****************************************************************************'
+
 echo '****************************************************************************'
 ####
 
@@ -2137,6 +2197,58 @@ else
 fi
 
 else
+
+echo '*****************Should show ExecStart="'$ENTROPY_EXTRAOPTIONS'" in rngd service **************'
+echo -n "[REQ 3.5]   Checking RNGD options configured..." > `tty`
+echo "[REQ 3.5]   Checking RNGD options configured..." 
+
+cat /usr/lib/systemd/system/rngd.service
+echo
+
+if [ "$CUR_VIRTUAL_STATUS" == "Yes" ];
+then 
+    RNGD_OPTIONS=`cat /usr/lib/systemd/system/rngd.service | grep "ExecStart" | grep -v '^#' | cut -f2 -d"="`
+    if [ "$RNGD_OPTIONS" == '"'"$ENTROPY_EXTRAOPTIONS"'"' ]; then
+        echo "    ==>Entropy options set correctly for virtual environment. OK."
+        echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`
+    else
+        echo 'Please update /usr/lib/systemd/system/rngd.service with the following line ExecStart="'$ENTROPY_EXTRAOPTIONS'"'
+        echo "    ==>Automatic check failed!"
+        echo -e "\t\t\t${RED}Failed${NONE}" > `tty`
+    fi
+else
+    echo "    ==>Not a virtual machine. OK"
+    echo -e "\t\t\t${YELLOW}N/A${NONE}" > `tty`
+fi
+
+fi
+
+
+echo '*****************Should show ExecStart="'$ENTROPY_EXTRAOPTIONS'" in rngd service **************'
+echo -n "[REQ 3.5]   Checking RNGD options configured..." > `tty`
+echo "[REQ 3.5]   Checking RNGD options configured..." 
+
+cat /usr/lib/systemd/system/rngd.service
+echo
+
+if [ "$CUR_VIRTUAL_STATUS" == "Yes" ];
+then 
+    RNGD_OPTIONS=`cat /usr/lib/systemd/system/rngd.service | grep "ExecStart" | grep -v '^#' | cut -f2 -d"="`
+    if [ "$RNGD_OPTIONS" == '"'"$ENTROPY_EXTRAOPTIONS"'"' ]; then
+        echo "    ==>Entropy options set correctly for virtual environment. OK."
+        echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`
+    else
+        echo 'Please update /usr/lib/systemd/system/rngd.service with the following line ExecStart="'$ENTROPY_EXTRAOPTIONS'"'
+        echo "    ==>Automatic check failed!"
+        echo -e "\t\t\t${RED}Failed${NONE}" > `tty`
+    fi
+else
+    echo "    ==>Not a virtual machine. OK"
+    echo -e "\t\t\t${YELLOW}N/A${NONE}" > `tty`
+fi
+
+fi
+
 
 echo '*****************Should show ExecStart="'$ENTROPY_EXTRAOPTIONS'" in rngd service **************'
 echo -n "[REQ 3.5]   Checking RNGD options configured..." > `tty`
@@ -2202,6 +2314,8 @@ if [ `echo "$IPTABLES" | grep "$IPTABLES_RESULT" | wc -l` != 1 ]; then
 else
   echo "    ==>iptables service is not running. OK."
   echo -e "\t\t\t${GREEN}Passed${NONE}" > `tty`
+<<<<<<< HEAD:linux/supplementary-checks.sh
+<<<<<<< HEAD:linux/supplementary-checks.sh
 fi
 
 else
@@ -2213,6 +2327,32 @@ echo -e "\t\t\t${GREEN}Skipped${NONE}" > `tty`
 
 fi
 
+=======
+fi
+
+else
+
+echo -n "[REQ 4.2]   Skipping iptables Firewall test..." > `tty`
+echo "[REQ 4.2]   Skipping iptables Firewall test..." 
+echo "    ==>Test for iptables service is skipped. OK."
+echo -e "\t\t\t${GREEN}Skipped${NONE}" > `tty`
+
+fi
+
+>>>>>>> 9d3f073c0926e9fa4b2383489ec79c3ed5f81518:linux/supplementary-checks.sh
+=======
+fi
+
+else
+
+echo -n "[REQ 4.2]   Skipping iptables Firewall test..." > `tty`
+echo "[REQ 4.2]   Skipping iptables Firewall test..." 
+echo "    ==>Test for iptables service is skipped. OK."
+echo -e "\t\t\t${GREEN}Skipped${NONE}" > `tty`
+
+fi
+
+>>>>>>> 27ac4e669dbbf28b094e43ae66bf35e0e1031df4:linux/supplementary-checks.sh
 echo '****************************************************************************'
 echo '****************************************************************************'
 #####
