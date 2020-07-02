@@ -1,0 +1,4 @@
+.exe filter=lfs diff=lfs merge=lfs -text
+.ex_ filter=lfs diff=lfs merge=lfs -text
+.cab filter=lfs diff=lfs merge=lfs -text
+.sys filter=lfs diff=lfs merge=lfs -text
