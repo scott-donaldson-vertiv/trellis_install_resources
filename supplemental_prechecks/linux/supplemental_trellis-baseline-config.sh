@@ -34,16 +34,20 @@
 #---------------------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------------------
-# Script Name: supplimental_trellis_baseline-config.sh
-# Description: Reconfigures a RHEL/CentOS/OEL 6.x/7.x host for Trellis(tm) Enterprise 
-#              installation.
-# Created: 2013/05/01
-# Modified: 2020/03/23
-# Authors: Michael Santangelo [FRM. NETPWR/AVOCENT/UK], Scott Donaldson [VERTIV/AVOCENT/UK]
-# Contributors: Ray Daugherty [VERTIV/AVOCENT/UK], Mark Zagorski [VERTIV/AVOCENT/UK]
-# Company: Vertiv Infrastructure Ltd.
-# Group: Software Delovery, Services
-# Email: global.services.delivery.development@vertivco.com
+# Script Name: 	supplemental_trellis_baseline-config.sh
+# Description: 	Reconfigures a RHEL/CentOS/OEL 6.x/7.x host for Trellis(tm) Enterprise 
+#              	installation.
+# Created: 		2013/05/01
+# Modified: 	2020/03/23
+# Authors: 		Michael Santangelo [FRM. NETPWR/AVOCENT/UK], Scott Donaldson [VERTIV/AVOCENT/UK]
+# Contributors:	Ray Daugherty [VERTIV/AVOCENT/UK], Mark Zagorski [VERTIV/AVOCENT/UK]
+# Maintainers:	Mark Zagorski [VERTIV/AVOCENT/UK], Scott Donaldson [NETPWR/AVOCENT/UK]
+# Company:		Vertiv Infrastructure Ltd.
+# Group:		Software Delivery, Services
+# Contact:		global.services.delivery.development@vertivco.com
+# Company: 		Vertiv Infrastructure Ltd.
+# Group:		Software Delovery, Services
+# Email:		global.services.delivery.development@vertivco.com
 #---------------------------------------------------------------------------------------------
 
 

@@ -34,7 +34,7 @@
 #---------------------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------------------
-# Script Name: 		supplimental_trellis-checks.sh
+# Script Name: 		supplemental_trellis-checks.sh
 # Created: 			2013/05/01
 # Modified: 		2020/07/02
 # Authors:			Scott Donaldson [NETPWR/AVOCENT/UK], Ray Daugherty [NETPWR/AVOCENT/US]
