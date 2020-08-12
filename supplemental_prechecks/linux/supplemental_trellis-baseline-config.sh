@@ -34,16 +34,20 @@
 #---------------------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------------------
-# Script Name: supplimental_trellis_baseline-config.sh
-# Description: Reconfigures a RHEL/CentOS/OEL 6.x/7.x host for Trellis(tm) Enterprise 
-#              installation.
-# Created: 2013/05/01
-# Modified: 2020/03/23
-# Authors: Michael Santangelo [FRM. NETPWR/AVOCENT/UK], Scott Donaldson [VERTIV/AVOCENT/UK]
-# Contributors: Ray Daugherty [VERTIV/AVOCENT/UK], Mark Zagorski [VERTIV/AVOCENT/UK]
-# Company: Vertiv Infrastructure Ltd.
-# Group: Software Delovery, Services
-# Email: global.services.delivery.development@vertivco.com
+# Script Name: 	supplemental_trellis_baseline-config.sh
+# Description: 	Reconfigures a RHEL/CentOS/OEL 6.x/7.x host for Trellis(tm) Enterprise 
+#              	installation.
+# Created: 		2013/05/01
+# Modified: 	2020/03/23
+# Authors: 		Michael Santangelo [FRM. NETPWR/AVOCENT/UK], Scott Donaldson [VERTIV/AVOCENT/UK]
+# Contributors:	Ray Daugherty [VERTIV/AVOCENT/UK], Mark Zagorski [VERTIV/AVOCENT/UK]
+# Maintainers:	Mark Zagorski [VERTIV/AVOCENT/UK], Scott Donaldson [NETPWR/AVOCENT/UK]
+# Company:		Vertiv Infrastructure Ltd.
+# Group:		Software Delivery, Services
+# Contact:		global.services.delivery.development@vertivco.com
+# Company: 		Vertiv Infrastructure Ltd.
+# Group:		Software Delovery, Services
+# Email:		global.services.delivery.development@vertivco.com
 #---------------------------------------------------------------------------------------------
 
 
@@ -301,7 +305,7 @@ fi
 
 
 # TODO: Add dynamic loading for Trellis Release & Supported OS
-declare -a RELEASE_SUPPORTED=( "7.6" "7.5" "7.4" "7.3" "6.10" "6.9" "6.8" "6.7" )
+declare -a RELEASE_SUPPORTED=( "7.8" "7.7" "7.6" "7.5" "7.4" "7.3" "6.10" "6.9" "6.8" "6.7" )
 declare -a RELEASE_DISTRO_SUPPORTED=( "CENTOS" "REDHAT" "ORACLE" )
 
 if [[ " ${RELEASE_DISTRO_SUPPORTED[@]} " =~ " ${RELEASE_DISTRO} " ]];  then
@@ -326,21 +330,12 @@ fi
 if [ $RELEASE_MAJOR = "6" ]; then
   IPTABLES_RESULT="iptables: Firewall is not running."
   OS_PACKAGES_BASE="binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl.i686 redhat-lsb redhat-lsb-core.i686 sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk java-1.7.0-openjdk screen"
-<<<<<<< HEAD
-  OS_PACKAGES_DEBUG="bpftool fio hdparms iptraf nmap strace tuned tuned-utils-systemtap"
-  OS_PACKAGES_REMOVE="aic94xxfirmware alsafirmware bind cronieanacron dhcpd dovecot httpd ivtvfirmware iwl*firmware iwl1000firmware iwl100firmware iwl105firmware iwl2000firmware iwl3160firmware iwl3945firmware iwl3945firmware iwl5150firmware iwl6000firmware iwl6000g2afirmware iwl6050firmware iwl7260firmware netsnmpd rsh rshserver rshserver squid telnet telnetserver tftpserver vsftpd wpa_supplicant ypbind ypserv"
-elif [ $RELEASE_MAJOR = "7" ]; then
-  IPTABLES_RESULT="iptables: Firewall is not running."
-  OS_PACKAGES_BASE="binutils cloog compat-db compat-db47 compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 coreutils cpp device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 lsof make mpfr mtools net-tools openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-x11-server-utilsvi  xorg-x11-utils"
-  OS_PACKAGES_DEBUG="bpftool fio hdparms iptraf nmap pcp-pmda-bcc pcp-pmda-bonding pcp-pmda-trace strace tuned tuned-utils-systemtap"
-=======
   OS_PACKAGES_DEBUG="bpftool iptraf nmap strace tuned tuned-utils-systemtap"
   OS_PACKAGES_REMOVE="aic94xxfirmware alsafirmware bind cronieanacron dhcpd dovecot httpd ivtvfirmware iwl*firmware iwl1000firmware iwl100firmware iwl105firmware iwl2000firmware iwl3160firmware iwl3945firmware iwl3945firmware iwl5150firmware iwl6000firmware iwl6000g2afirmware iwl6050firmware iwl7260firmware netsnmpd rsh rshserver rshserver squid telnet telnetserver tftpserver vsftpd wpa_supplicant ypbind ypserv"
 elif [ $RELEASE_MAJOR = "7" ]; then
   IPTABLES_RESULT="iptables: Firewall is not running."
   OS_PACKAGES_BASE="binutils cloog compat-db compat-db47 compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 coreutils cpp device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 lsof make mpfr mtools openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-x11-server-utilsvi  xorg-x11-utils"
   OS_PACKAGES_DEBUG="bpftool iptraf nmap pcp-pmda-bcc pcp-pmda-bonding pcp-pmda-trace strace tuned tuned-utils-systemtap"
->>>>>>> 27ac4e669dbbf28b094e43ae66bf35e0e1031df4
   OS_PACKAGES_REMOVE="aic94xxfirmware alsafirmware bind cronieanacron dhcpd dovecot httpd ivtvfirmware iwl*firmware iwl1000firmware iwl100firmware iwl105firmware iwl2000firmware iwl3160firmware iwl3945firmware iwl3945firmware iwl5150firmware iwl6000firmware iwl6000g2afirmware iwl6050firmware iwl7260firmware netsnmpd rsh rshserver rshserver squid telnet telnetserver tftpserver vsftpd wpa_supplicant ypbind ypserv"
   if [ $RELEASE_DISTRO = 'ORACLE' ]; then
 	$OS_PACKAGES_BASE += " kmod-oracleasm oracleasm-support oracle-database-preinstall-18c"
@@ -568,11 +563,7 @@ echo "---SET UP THE ORACLE .BASH_PROFILE---"
 set /home/oracle/.bash_profile
 
 MW_HOME=/u01/fm/11.1.1.7/
-<<<<<<< HEAD
 ORACLE_HOME=/u01/app/oracle/product/12.1.0.2
-=======
-ORACLE_HOME=/u01/app/oracle/product/12.1.0
->>>>>>> 27ac4e669dbbf28b094e43ae66bf35e0e1031df4
 ORACLE_SID=orcl
 export MW_HOME ORACLE_HOME ORACLE_SID
 
