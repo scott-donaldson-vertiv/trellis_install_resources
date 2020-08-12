@@ -1163,6 +1163,15 @@ print_data "*************************************************************"
 	print_header "[REQ 4.6]  Checking Firewalld is disabled" "Confirm Firewalld service is disabled on 7.x systems."
 
 	RC=pass
+	if [ "$RELEASE_VERSION" = "7" ]; then
+		if [ `echo systemctl is-active firewalld.service | grep "inactive" | wc -l` != 1 ]; then
+			RC=pass
+			echo "If you want to stop it manually you will need to run ''systemctl stop firewalld.service && systemctl disable firewalld.service'' on the command line"   
+	else
+		print_data "firewall.service is not showing as "inactive" "
+	fi
+
+	RC=pass
 	if [ "$RELEASE_VERSION" = "6" ]; then
 		print_data "Skipping Firewalld test for 6.x system"
 	else
@@ -1520,7 +1529,7 @@ print_data -b " "
 #**************************************************************************************************************************************
 
 # set OS release dependent variables
-if [ "$RELEASE" == "7.5" ] || [ "$RELEASE" == "7.6" ] || [ "$RELEASE" == "7.7" ]; then
+if [ "$RELEASE" == "7.5" ] || [ "$RELEASE" == "7.6" ] || [ "$RELEASE" == "7.7" ] || [ "$RELEASE" == "7.8" ]; then
   IPTABLES_RESULT="iptables: Firewall is not running."
   REQ_1_59_PACKAGES="binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts iptraf kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 make mtools nmap openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio strace sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-xll-server-utils xorg-x11-utils"
   ENTROPY="rngd -r /dev/urandom -o /dev/random"
