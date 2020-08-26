@@ -38,7 +38,7 @@
 # Description: 	Reconfigures a RHEL/CentOS/OEL 6.x/7.x host for Trellis(tm) Enterprise 
 #              	installation.
 # Created: 		2013/05/01
-# Modified: 	2020/03/23
+# Modified: 	2020/08/12
 # Authors: 		Michael Santangelo [FRM. NETPWR/AVOCENT/UK], Scott Donaldson [VERTIV/AVOCENT/UK]
 # Contributors:	Ray Daugherty [VERTIV/AVOCENT/UK], Mark Zagorski [VERTIV/AVOCENT/UK]
 # Maintainers:	Mark Zagorski [VERTIV/AVOCENT/UK], Scott Donaldson [NETPWR/AVOCENT/UK]
@@ -66,7 +66,6 @@ SCRIPT_VERSION="3.2.2"
 
 CFG_OUTPUT_FOLDER="~${ENV_REAL_USER}"
 CFG_OUTPUT_TMP_FOLDER="/tmp"
-CFG_LOGFILE="trellis-precheck_${ENV_HOSTNAME}_`date +"%Y%m%d-%H%M"`.log"
 CFG_LOGFILE_PATH="${CFG_OUTPUT_TMP_FOLDER}/${CFG_LOGFILE}"
 CFG_OUTPUT_BUNDLE_FOLDER="${CFG_OUTPUT_TMP_FOLDER}/trellis_config"
 
@@ -324,6 +323,28 @@ if [[ " ${RELEASE_DISTRO_SUPPORTED[@]} " =~ " ${RELEASE_DISTRO} " ]];  then
 fi
 
 ##
+#  Check if using DHCPD for IP assinments, static assignment via DHCP is valid and should pass (e.g. DHCPD)
+
+if [ $RELEASE_MAJOR = "7" ]; then
+        OS_NIC_NAME=`ip link | grep -v LOOPBACK | grep -v 'link/' | awk -F ': ' '{ print $2 }'`
+        OS_NIC_QTY=`ip addr | grep "inet " | grep -v 127.0.0.1 | wc -l`
+else
+        OS_NIC_NAME=`ifconfig | awk '{ print $1 }'| head -1`
+        OS_NIC_QTY=`ifconfig | grep "inet addr:" | grep -v "127.0.0.1" | wc -l`
+fi
+
+#
+OS_NIC_PROTO=`grep "BOOTPROTO" /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME | awk -F= '{ print $2 }' | sed 's@"@@g'`
+ echo "Validating DHCP configuration..."
+if [[ $OS_NIC_PROTO == "dhcp"  ||  $OS_NIC_PROTO == "DHCP" ]]; then
+    AWS_VAL=true
+ else
+  AWS_VAL=false
+fi
+
+echo "The AWS_VAL flag is set to $AWSVAL ** Ensure you are running STATIC DHCP reservations!! **"
+
+##
 #  Prepare Package Lists
 #
 # TODO: Cleanup Package Handling
@@ -331,17 +352,23 @@ if [ $RELEASE_MAJOR = "6" ]; then
   IPTABLES_RESULT="iptables: Firewall is not running."
   OS_PACKAGES_BASE="binutils compat-db compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-devel glibc-devel.i686 kexec-tools ksh libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 libXext libXi libXtst make openmotif openssl.i686 redhat-lsb redhat-lsb-core.i686 sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 java-1.6.0-openjdk java-1.7.0-openjdk screen"
   OS_PACKAGES_DEBUG="bpftool iptraf nmap strace tuned tuned-utils-systemtap"
-  OS_PACKAGES_REMOVE="aic94xxfirmware alsafirmware bind cronieanacron dhcpd dovecot httpd ivtvfirmware iwl*firmware iwl1000firmware iwl100firmware iwl105firmware iwl2000firmware iwl3160firmware iwl3945firmware iwl3945firmware iwl5150firmware iwl6000firmware iwl6000g2afirmware iwl6050firmware iwl7260firmware netsnmpd rsh rshserver rshserver squid telnet telnetserver tftpserver vsftpd wpa_supplicant ypbind ypserv"
+  # Do not include dhcpd in removal it will be handled seperately.
+  OS_PACKAGES_REMOVE="aic94xxfirmware alsafirmware bind cronieanacron dovecot httpd ivtvfirmware iwl*firmware iwl1000firmware iwl100firmware iwl105firmware iwl2000firmware iwl3160firmware iwl3945firmware iwl3945firmware iwl5150firmware iwl6000firmware iwl6000g2afirmware iwl6050firmware iwl7260firmware netsnmpd rsh rshserver rshserver squid telnet telnetserver tftpserver vsftpd wpa_supplicant ypbind ypserv"
 elif [ $RELEASE_MAJOR = "7" ]; then
   IPTABLES_RESULT="iptables: Firewall is not running."
   OS_PACKAGES_BASE="binutils cloog compat-db compat-db47 compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 coreutils cpp device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 lsof make mpfr mtools openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-x11-server-utilsvi  xorg-x11-utils"
   OS_PACKAGES_DEBUG="bpftool iptraf nmap pcp-pmda-bcc pcp-pmda-bonding pcp-pmda-trace strace tuned tuned-utils-systemtap"
-  OS_PACKAGES_REMOVE="aic94xxfirmware alsafirmware bind cronieanacron dhcpd dovecot httpd ivtvfirmware iwl*firmware iwl1000firmware iwl100firmware iwl105firmware iwl2000firmware iwl3160firmware iwl3945firmware iwl3945firmware iwl5150firmware iwl6000firmware iwl6000g2afirmware iwl6050firmware iwl7260firmware netsnmpd rsh rshserver rshserver squid telnet telnetserver tftpserver vsftpd wpa_supplicant ypbind ypserv"
+  # Do not include dhcpd in removal it will be handled seperately.
+  OS_PACKAGES_REMOVE="aic94xxfirmware alsafirmware bind cronieanacron dovecot httpd ivtvfirmware iwl*firmware iwl1000firmware iwl100firmware iwl105firmware iwl2000firmware iwl3160firmware iwl3945firmware iwl3945firmware iwl5150firmware iwl6000firmware iwl6000g2afirmware iwl6050firmware iwl7260firmware netsnmpd rsh rshserver rshserver squid telnet telnetserver tftpserver vsftpd wpa_supplicant ypbind ypserv"
   if [ $RELEASE_DISTRO = 'ORACLE' ]; then
 	$OS_PACKAGES_BASE += " kmod-oracleasm oracleasm-support oracle-database-preinstall-18c"
   elif [ $RELEASE_DISTRO = 'CENTOS' ]; then
 	$OS_PACKAGES_BASE += " "
   fi
+fi
+
+if [ $AWS_VAL == false ]; then
+  $OS_PACKAGES_REMOVE += 'dhcpd'
 fi
 
   
@@ -371,14 +398,25 @@ fi
 ##  
 #  Verify firewall is disabled.
 #
-#  TODO: Handle firewalld on RHEL 7.x
 echo ""
 echo "---CHECKING TO BE SURE IPTABLES IS TURNED OFF---"
 if [ $RELEASE_MAJOR = '7' ]; then
-	echo "[Error]: Unimplemented check for CentOS/Red Hat/Oracle Linux 7.x"
-else
+	echo " [Info]: Checking for firewalld.service on CentOS/Red Hat/Oracle Linux 7.x"
+	FIREWALLD_STATUS=`systemctl is-active firewalld`
+	if [ `echo $FIREWALLD_STATUS | grep "inactive" | wc -l` != 1 ]; then
+		echo "[Info]: The service firewalld is disabled."
+	elif [ `echo $FIREWALLD_STATUS | grep "unknown" | wc -l` != 1 ]; then
+		echo "[Info]: The service firewalld is not installed or is disabled."
+	else
+		echo "[Error]: The service firewalld is active, this must be disabled."
+		systemctl stop firewalld.service
+		systemctl disable firewalld.service
+	fi
+
+if  [ $RELEASE_MAJOR = '6' ]; then
+        echo " [Info ] Checking for iptables on RHEL 6.x"
 	IPTABLES=`service iptables status`
-	if [ "$IPTABLES" != "$IPTABLES_RESULT" ]; then
+	if[ "$IPTABLES" != "$IPTABLES_RESULT" ]; 
 	  echo "[Warning]: The firewall service iptables is running, this does not meet reqirement REQ 4.2."
 	  echo "[Action]: Stopping & disabling iptables service..."
 	  service iptables stop
@@ -433,7 +471,7 @@ fi
 
 OS_NIC_PROTO=`grep "BOOTPROTO" /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME | awk -F= '{ print $2 }' | sed 's@"@@g'`
 
-if [ $OS_NIC_PROTO = dhcp ]; then
+if [ $OS_NIC_PROTO = "dhcp" ] || [ $OS_NIC_PROTO = "DHCP" ] && [ $AWS_VAL = "false" ] ; then
   echo "[Info]: Interface $OS_NIC_NAME is set to $OS_NIC_PROTO which does not meet Trellis requirements for static or none."
   echo "[Action]: Disabling DHCPD as required..."
   cp /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME $BACKUP/ifcfg-$OS_NIC_NAME.bak
@@ -443,6 +481,7 @@ if [ $OS_NIC_PROTO = dhcp ]; then
   echo "[Warning]: Since bootOS_NIC_PROTO was set to DHCP, a permanent IP, Gateway, and Netmask may need to be put in to /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME to assure a static IP is, indeed, in place"
 else
   echo "[Info]: Interface $OS_NIC_NAME is set to $OS_NIC_PROTO which passes Trellis requirements."
+  echo "[Info]: The AWS_VAL check is set to $AWS_VAL"
 fi
 
 ##
@@ -688,7 +727,7 @@ service nodemgrsvc
         type            = UNLISTED
         disable         = yes
         socket_type     = stream
-        OS_NIC_PROTOcol        = tcp
+        protocol        = tcp
         wait            = yes
         user            = root
         port            = 5556
@@ -712,7 +751,7 @@ service nodemgrsvc
         type            = UNLISTED
         disable         = yes
         socket_type     = stream
-        OS_NIC_PROTOcol        = tcp
+        protocol        = tcp
         wait            = yes
         user            = root
         port            = 5556

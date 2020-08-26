@@ -29,6 +29,7 @@ Resources to supplement the existing Engineering Pre-Installation Check utility 
 #### Versions
 | Release   | Release Date      | Notes                                                           |
 |-----------|-------------------|-----------------------------------------------------------------|
+| 1.1		| 2020/08/12		| Updated supplemental_precheck linux for firewalld and other bugs |
 | 1.0		| 2020/07/02		| Clean-up of resources, script names, copy right statements. Corrected Author, Contributors & Maintainers to be consistent and compliant with license requirements. |
 
 ## Support
@@ -38,6 +39,7 @@ alternatives - is not provided.
 
 | Release   | Support Status     | Notes                           | Trellis Compatibility |
 |-----------|--------------------|---------------------------------|-----------------------|
+| 1.1 			| Supported          | Fixes for 5.1.1 release.              | 5.1.x, 5.0.x          |
 | 1.0 			| Supported          | Initial Release                 | 5.1.x, 5.0.x          |
 
 ### License
@@ -49,8 +51,8 @@ Re-distribution is subject to the terms of the included license (LICENSE.MD).
 | Name                | Organization        | Contact                                             |
 |---------------------|---------------------|-----------------------------------------------------|
 | Scott Donaldson     | Vertiv              | scott.donaldson@vertiv.com                          |
-| Ray Daugherty       | Vertiv              | ray.daugherty@vertiv.com                            |
 | Mark Zagorski       | Vertiv              | mark.zagorski@vertiv.com                            |
+| Ray Daugherty       | Vertiv              | ray.daugherty@vertiv.com                            |
 | Richard Golstein    | Emerson (Formerly)  | richard.golstein@emerson.com (DEFUNCT)              |
 | Michael Santangelo  | Emerson (Formerly)  | michael.santangelo@emerson.com (DEFUNCT)            |
 
