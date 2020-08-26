@@ -66,7 +66,6 @@ SCRIPT_VERSION="3.2.2"
 
 CFG_OUTPUT_FOLDER="~${ENV_REAL_USER}"
 CFG_OUTPUT_TMP_FOLDER="/tmp"
-CFG_LOGFILE="trellis-precheck_${ENV_HOSTNAME}_`date +"%Y%m%d-%H%M"`.log"
 CFG_LOGFILE_PATH="${CFG_OUTPUT_TMP_FOLDER}/${CFG_LOGFILE}"
 CFG_OUTPUT_BUNDLE_FOLDER="${CFG_OUTPUT_TMP_FOLDER}/trellis_config"
 
@@ -188,25 +187,6 @@ else
   echo "Please respond with either [f]ront or [b]ack for the host server."
   exit
 fi
-
-##
-#  Check if using DHCPD for IP assinments, static assignment via DHCP is valid and should pass (e.g. DHCPD)
-#
-OS_NIC_PROTO=`grep "BOOTPROTO" /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME | awk -F= '{ print $2 }' | sed 's@"@@g'`
-
-if [ $OS_NIC_PROTO = "dhcp" || $OS_NIC_PROTO = "DHCP" ]; then
-	read -p "Are static IPs assigned via DHCP (e.g. AWS EC2)? <y/n>" AWS 
-	if [[ $AWS == "y" || $AWS == "Y" || $AWS == "yes" || $AWS == "YES" ]]; then 
-	  AWS_VAL=true
-	fi
-
-	if [[ $AWS == "n" || $AWS == "N" || $AWS == "no" || $AWS == "NO" ]];  then 
-	 AWS_VAL=false
-	fi
-else
-  AWS_VAL=false
-fi
-
 
 ##  Check Red Hat release version and set a number of variables based
 ##  on the version. Primitive way to check release version, but aside
@@ -343,6 +323,28 @@ if [[ " ${RELEASE_DISTRO_SUPPORTED[@]} " =~ " ${RELEASE_DISTRO} " ]];  then
 fi
 
 ##
+#  Check if using DHCPD for IP assinments, static assignment via DHCP is valid and should pass (e.g. DHCPD)
+
+if [ $RELEASE_MAJOR = "7" ]; then
+        OS_NIC_NAME=`ip link | grep -v LOOPBACK | grep -v 'link/' | awk -F ': ' '{ print $2 }'`
+        OS_NIC_QTY=`ip addr | grep "inet " | grep -v 127.0.0.1 | wc -l`
+else
+        OS_NIC_NAME=`ifconfig | awk '{ print $1 }'| head -1`
+        OS_NIC_QTY=`ifconfig | grep "inet addr:" | grep -v "127.0.0.1" | wc -l`
+fi
+
+#
+OS_NIC_PROTO=`grep "BOOTPROTO" /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME | awk -F= '{ print $2 }' | sed 's@"@@g'`
+ echo "Validating DHCP configuration..."
+if [[ $OS_NIC_PROTO == "dhcp"  ||  $OS_NIC_PROTO == "DHCP" ]]; then
+    AWS_VAL=true
+ else
+  AWS_VAL=false
+fi
+
+echo "The AWS_VAL flag is set to $AWSVAL ** Ensure you are running STATIC DHCP reservations!! **"
+
+##
 #  Prepare Package Lists
 #
 # TODO: Cleanup Package Handling
@@ -366,7 +368,7 @@ elif [ $RELEASE_MAJOR = "7" ]; then
 fi
 
 if [ $AWS_VAL == false ]; then
-  $OS_PACKAGES_REMOVE +=' dhcpd'
+  $OS_PACKAGES_REMOVE += 'dhcpd'
 fi
 
   
@@ -399,20 +401,22 @@ fi
 echo ""
 echo "---CHECKING TO BE SURE IPTABLES IS TURNED OFF---"
 if [ $RELEASE_MAJOR = '7' ]; then
-	echo "[Error]: Unimplemented check for CentOS/Red Hat/Oracle Linux 7.x"
+	echo " [Info]: Checking for firewalld.service on CentOS/Red Hat/Oracle Linux 7.x"
 	FIREWALLD_STATUS=`systemctl is-active firewalld`
 	if [ `echo $FIREWALLD_STATUS | grep "inactive" | wc -l` != 1 ]; then
 		echo "[Info]: The service firewalld is disabled."
 	elif [ `echo $FIREWALLD_STATUS | grep "unknown" | wc -l` != 1 ]; then
 		echo "[Info]: The service firewalld is not installed or is disabled."
-	elif
+	else
 		echo "[Error]: The service firewalld is active, this must be disabled."
 		systemctl stop firewalld.service
 		systemctl disable firewalld.service
 	fi
-else
+
+if  [ $RELEASE_MAJOR = '6' ]; then
+        echo " [Info ] Checking for iptables on RHEL 6.x"
 	IPTABLES=`service iptables status`
-	if [ "$IPTABLES" != "$IPTABLES_RESULT" ]; then
+	if[ "$IPTABLES" != "$IPTABLES_RESULT" ]; 
 	  echo "[Warning]: The firewall service iptables is running, this does not meet reqirement REQ 4.2."
 	  echo "[Action]: Stopping & disabling iptables service..."
 	  service iptables stop
@@ -467,7 +471,7 @@ fi
 
 OS_NIC_PROTO=`grep "BOOTPROTO" /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME | awk -F= '{ print $2 }' | sed 's@"@@g'`
 
-if [ $OS_NIC_PROTO = "dhcp" || $OS_NIC_PROTO = "DHCP" ]&& [ $AWS_VAL = "false" ] ; then
+if [ $OS_NIC_PROTO = "dhcp" ] || [ $OS_NIC_PROTO = "DHCP" ] && [ $AWS_VAL = "false" ] ; then
   echo "[Info]: Interface $OS_NIC_NAME is set to $OS_NIC_PROTO which does not meet Trellis requirements for static or none."
   echo "[Action]: Disabling DHCPD as required..."
   cp /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME $BACKUP/ifcfg-$OS_NIC_NAME.bak
@@ -477,6 +481,7 @@ if [ $OS_NIC_PROTO = "dhcp" || $OS_NIC_PROTO = "DHCP" ]&& [ $AWS_VAL = "false" ]
   echo "[Warning]: Since bootOS_NIC_PROTO was set to DHCP, a permanent IP, Gateway, and Netmask may need to be put in to /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME to assure a static IP is, indeed, in place"
 else
   echo "[Info]: Interface $OS_NIC_NAME is set to $OS_NIC_PROTO which passes Trellis requirements."
+  echo "[Info]: The AWS_VAL check is set to $AWS_VAL"
 fi
 
 ##
@@ -722,7 +727,7 @@ service nodemgrsvc
         type            = UNLISTED
         disable         = yes
         socket_type     = stream
-        OS_NIC_PROTOcol        = tcp
+        protocol        = tcp
         wait            = yes
         user            = root
         port            = 5556
@@ -746,7 +751,7 @@ service nodemgrsvc
         type            = UNLISTED
         disable         = yes
         socket_type     = stream
-        OS_NIC_PROTOcol        = tcp
+        protocol        = tcp
         wait            = yes
         user            = root
         port            = 5556

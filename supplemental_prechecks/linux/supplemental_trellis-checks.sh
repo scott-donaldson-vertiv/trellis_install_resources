@@ -68,11 +68,11 @@ DD_PARAM_CACHED=bs=8k count=100k
 DD_OUTFILE=/tmp/output.img
 
 #CFG_OUTPUT_FOLDER=~${ENV_REAL_USER}
-#CFG_OUTPUT_TMP_FOLDER=/tmp
+CFG_OUTPUT_TMP_FOLDER=/tmp
 CFG_LOGFILE=trellis-precheck_${ENV_HOSTNAME}_`date +%Y%m%d-%H%M`.log
-#CFG_LOGFILE_PATH=${CFG_OUTPUT_TMP_FOLDER}/${CFG_LOGFILE}
+CFG_LOGFILE_PATH=${CFG_OUTPUT_TMP_FOLDER}/${CFG_LOGFILE}
 CFG_LOGFILE_PATH=${ENV_ORIGIN_FOLDER}/${CFG_LOGFILE}
-$CFG_OUTPUT_BUNDLE_FOLDER="${CFG_OUTPUT_TMP_FOLDER}/trellis_config"
+CFG_OUTPUT_BUNDLE_FOLDER="${CFG_OUTPUT_TMP_FOLDER}/trellis_config"
 
 # The following are used for terminal output
 NONE='\033[00m'
@@ -154,7 +154,7 @@ processRC ()
 		print_data -t "$1${YELLOW}Skipped${NONE}"
 	else
 		print_data "==>Failed"
-		print_data -t "$1${RED}Fsiled${NONE}"
+		print_data -t "$1${RED}Failed${NONE}"
 fi
 )
 
@@ -466,8 +466,8 @@ print_data "*************************************************************"
 	  elif [ "$SYSCTRL_PARM" = "fs.file-max" ]; then
 		SYSCTRL_PARM_min=6815744
 	  elif [ "$SYSCTRL_PARM" = "kernel.shmall" ]; then
-	# (27 Sep 2018 - RayD) Changed value from 2097152 to 3774873, taken from the 7.3 kickstart
-		SYSCTRL_PARM_min=3774873
+	# Value changed to 5.1 value double the 2097152 to 4194304 (25.08.2020 - MZ)
+		SYSCTRL_PARM_min=4194304
 	  elif [ "$SYSCTRL_PARM" = "kernel.shmmax" ]; then
 	# (27 Sep 2018 - RayD) Changed value from 536870912 to 15461882265, taken from the 7.3 kickstart
 		  SYSCTRL_PARM_min=15461882265
@@ -541,7 +541,7 @@ print_data "*************************************************************"
 
 1-65-checkLicenseSymlinks()
 {
-	print_header "[REQ 1.65]  Checking for Licence server symlinks (back only)" "Confirm links exist in /u02/licensing folder"
+ print_header "[REQ 1.65]  Checking for Licence server symlinks (back only < Trellis 5.1.1) " "Confirm links exist in /u02/licensing folder"
 
 	RC=pass
 	# (13 Oct 2018 - RayD) Skip test if not 6.x or this is the front server
@@ -558,8 +558,6 @@ print_data "*************************************************************"
 		RC=skip
 		print_data "Skipping symlinks test since this is the front server"
 	fi
-	
-	processRC "[REQ 1.65] Checking for Licence Server symlinks (back only)...\t"
 }
 
 1-66-checkRetainedPermissions()
@@ -596,9 +594,9 @@ print_data "*************************************************************"
 	print_header "[REQ 1.67]  Checking /tmp permissions are correct"
 
 	RC=fail
-	su - oracle -c touch /tmp/testwrite.txt
+	su - oracle -c 'touch /tmp/testwrite.txt'
 	if sudo -u oracle test -f '/tmp/testwrite.txt'; then
-		RC = pass
+		RC=pass
 	fi
 	
 	processRC "[REQ 1.67] Checking /tmp permissions are correct...\t\t"
@@ -977,10 +975,15 @@ print_data "*************************************************************"
 			if [ -e /usr/bin/open-vm-tools ]; then
 				print_data "VMWare Open VM Tools version `open-vm-tools -v` installed."
 			else
+
+                        if [ -f /sys/hypervisor/uuid ] && [ `head -c 3 /sys/hypervisor/uuid` == ec2 ]; then
+                                 print_data "Running on AWS environment - tools already installed" 
+                        else
 				RC=fail
 				echo "VMWare Guest Tools not detected."	
 			fi
 		fi
+         fi
 	else
 		print_data "Not a virtual machine."
 		RC=skip
@@ -1033,21 +1036,33 @@ print_data "*************************************************************"
 	RC=pass
 
 	# (10 Oct 2018 - RayD) Only do iptables check for 6.x systems
-	if [ "$RELEASE_VERSION" = "6" ]; then
-		IPTABLES=`service iptables status`
-		##  Added for RH6.5 where the status returns trailing special characters
-		IPTABLES=`echo $IPTABLES`
-		if [ `echo "$IPTABLES" | grep "$IPTABLES_RESULT" | wc -l` != 1 ]; then
-			RC=fail
-			print_data "If you want to stop the service manually you will need to run 'service iptables stop && chkconfig iptables off' on the command line"
-			if [ $RELEASE = "6.5" ]; then
-				echo "Once complete please restart the OS for changes to be reflected in the service status"
-			fi
-		fi
-	else
-		print_data "Skip iptables check for 7.x systems"
-		RC=skip
-	fi
+        # (12 Aug 2020 - MarkZ) Updated to do RHEL 7.x and 6.x systems
+        if [ $RELEASE_MAJOR = '7' ]; then
+        echo " [Info]: Checking for firewalld.service on CentOS/Red Hat/Oracle Linux 7.x"
+        FIREWALLD_STATUS=`systemctl is-active firewalld`
+        if [ `echo $FIREWALLD_STATUS | grep "inactive" | wc -l` != 1 ]; then
+                echo "[Info]: The service firewalld is disabled."
+        elif [ `echo $FIREWALLD_STATUS | grep "unknown" | wc -l` != 1 ]; then
+                echo "[Info]: The service firewalld is not installed or is disabled."
+        else
+                echo "[Error]: The service firewalld is active, this must be disabled."
+                systemctl stop firewalld.service
+                systemctl disable firewalld.service
+        fi
+
+        if  [ $RELEASE_MAJOR = '6' ]; then
+        echo " [Info ] Checking for iptables on RHEL 6.x"
+        IPTABLES=`service iptables status`
+        if[ "$IPTABLES" != "$IPTABLES_RESULT" ];
+          echo "[Warning]: The firewall service iptables is running, this does not meet reqirement REQ 4.2."
+          echo "[Action]: Stopping & disabling iptables service..."
+          service iptables stop
+          chkconfig iptables off
+          echo "[Info]: The firewall service iptables has been stopped and disabled to meet reqirement REQ 4.2."
+        else
+          echo "[Info]: The firewall service iptables is disabled and meets requirement REQ 4.2."
+        fi
+fi
 	
 	processRC "[REQ 4.2]  Checking firewall disabled......\t\t\t"
 }
@@ -1125,12 +1140,16 @@ print_data "*************************************************************"
 	print_header "[REQ 4.4]  Checking SELinux is disabled"
 
 	RC=pass
-	print_data "Contents of /etc/selinux/config:"
-	print_data "`cat /etc/selinux/config`"
-	SELINUX=`cat /etc/selinux/config | grep "SELINUX=" | grep -v "#" | cut -f2 -d"="`
-	if [ "$SELINUX" != "disabled" ]; then
-		RC=fail
-		print_data "If you want to do it manually you will need to edit /etc/selinux/config and replace the $SELINUX in SELINUX= with disabled"    
+        OS_CONFIG_SELINUX=`getenforce`
+        if [ $OS_CONFIG_SELINUX = 'Disabled' ]; then
+        echo "[Info]: SELinux is $OS_CONFIG_SELINUX, this meets requirement REQ 4.4."
+        elif [ $OS_CONFIG_SELINUX = 'Permissive' ]; then
+        echo "[Warning]: SELinux Permissive is funcionally correct however may produce failures in the official Trellis Precheck Utility."
+        echo "[Info]: SELinux is $OS_CONFIG_SELINUX, this meets requirement REQ 4.4."
+        else
+        echo "[Warning]: SELinux is $OS_CONFIG_SELINUX, this does not meets requirement REQ 4.4."	
+
+	print_data "If you want to do it manually you will need to edit /etc/selinux/config and replace the $SELINUX in SELINUX= with disabled"    
 	fi
 	
 	processRC "[REQ 4.4]  Checking SELinux is disabled...\t\t\t"
@@ -1148,13 +1167,18 @@ print_data "*************************************************************"
 			echo "If you want to do it manually you will need to run 'service ip6tables stop && chkconfig ip6tables off' on the command line"   
 		fi
 	else
-		IP6TABLES_STATUS=`systemctl status ip6tables`
-		if [ `echo $IP6TABLES_STATUS | grep "Unit ip6tables.service could not be found." | wc -l` != 1 ]; then
-			RC=fail
-			echo "If you want to stop it manually you will need to run 'systemctl stop ip6tables' on the command line"   
-		fi
+		echo "[Info]: Check could not detect ip6tables on RHEL/CentoS 6" 
+
 	fi
-	
+
+       if [ "$RELEASE_VERSION" = "7" ]; then
+                        RC=skip
+                        echo "Since this is RHEL 7 ip6tables.service is not available on this version and is replaced by firewalld.service"
+               else
+                echo "[Info]: Check could not detect ip6tables on RHEL/CentoS 6"
+
+        fi
+
 	processRC "[REQ 4.5]  Checking ip6tables is disabled...\t\t\t"	
 }
 
@@ -1166,19 +1190,16 @@ print_data "*************************************************************"
 	if [ "$RELEASE_VERSION" = "7" ]; then
 		if [ `echo systemctl is-active firewalld.service | grep "inactive" | wc -l` != 1 ]; then
 			RC=pass
-			echo "If you want to stop it manually you will need to run ''systemctl stop firewalld.service && systemctl disable firewalld.service'' on the command line"   
+			echo "Firewalld.service is showing as inactive"   
 	else
-		print_data "firewall.service is not showing as "inactive" "
+		print_data "firewall.service is not showing as inactive "
+                RC=fail
+	fi
 	fi
 
-	RC=pass
 	if [ "$RELEASE_VERSION" = "6" ]; then
+                RC=skip
 		print_data "Skipping Firewalld test for 6.x system"
-	else
-		if [ `echo systemctl status firewalld.service | grep "could not be found" | wc -l` != 1 ]; then
-			RC=fail
-			echo "If you want to stop it manually you will need to run ''systemctl stop firewalld.service && systemctl disable firewalld.service'' on the command line"   
-		fi
 	fi
 	
 	processRC "[REQ 4.6]  Checking Firewalld is disabled...\t\t\t"	
@@ -1199,32 +1220,60 @@ print_data "*************************************************************"
 	if [ "$IP_count" != 1 ]; then
 		RC=fail
 	fi
-	
-	processRC "[REQ 5.1]  Checking only 1 NIC enabled...\t\t\t"	
-}
 
+}
+	
 5-2-checkDHCP ()
-{
+	{
 	print_header "[REQ 5.2]  Checking IP address is static" "Confirm DHCP set to static or none"
 
 	RC=pass
-	if [ "$RELEASE_VERSION" = "6" ]; then
-		# Parsing a line like "eth0      Link encap:Ethernet  HWaddr 09:00:12:90:e3:e5" to extract "eth0"
-		NIC="`ifconfig | grep "Link encap" | grep -v lo | awk  -F" "  '{ print $1 }'`"
-	else
-		# Parsing a line like "eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 9001" to extract "eth0"
-		NIC="`ifconfig | grep "flags=" | grep -v lo | awk  -F" "  '{ print $1 }' | awk  -F":"  '{ print $1 }'`"	
-	fi
-	print_data "NIC=$NIC"
-	print_data "Checking the file /etc/sysconfig/network-scripts/ifcfg-${NIC} for a BOOTPROTO value of static or none"
-	print_data "`cat /etc/sysconfig/network-scripts/ifcfg-${NIC}`"
-	IP_set=`cat /etc/sysconfig/network-scripts/ifcfg-${NIC} | grep "BOOTPROTO" | cut -f2 -d"="`
-	if [ $IP_set != 'static' -a $IP_set != '"static"' -a $IP_set != 'none' -a $IP_set != '"none"' ]; then
-		RC=fail
-	fi
 	
-	processRC "[REQ 5.2]  Checking IP address is static...\t\t\t"	
+#  Check if using DHCPD for IP assignments, static assignment via DHCP is valid and should pass (e.g. DHCPD)
+
+if [ "$RELEASE_VERSION" = "7" ]; then
+        OS_NIC_NAME=`ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]" {gsub (" ","", $0); print $2;getline}'`    
+        OS_NIC_QTY=`ip addr | grep "inet " | grep -v 127.0.0.1 | wc -l`
+else
+        OS_NIC_NAME=`ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]" {gsub (" ","", $0); print $2;getline}'`
+        OS_NIC_QTY=`ifconfig | grep "inet addr:" | grep -v "127.0.0.1" | wc -l`
+fi
+
+OS_NIC_PROTO=`grep "BOOTPROTO" /etc/sysconfig/network-scripts/ifcfg-$OS_NIC_NAME | awk -F= '{ print $2 }' | sed 's@"@@g'`
+
+ echo "Validating DHCP configuration..."
+
+if [ $OS_NIC_PROTO=dhcp ]; then
+   AWS_VAL=true
+ else      
+   AWS_VAL=false
+ fi
+
+echo "The AWS_VAL flag is set to $AWSVAL"
+
+    
+	print_data "Checking the file /etc/sysconfig/network-scripts/ifcfg-${OS_NIC_NAME} for a BOOTPROTO value of static or none"
+	print_data "Checking also if the value is 'dchp' for AWS EC2 / static IP served by DHCPD"
+        print_data "`cat /etc/sysconfig/network-scripts/ifcfg-${OS_NIC_NAME}`"
+
+IP_set=`cat /etc/sysconfig/network-scripts/ifcfg-${OS_NIC_NAME} | grep "BOOTPROTO" | cut -f2 -d"="`
+
+	if [ $IP_set != "static" -o $IP_set != '"none"' ] && [ $AWS_VAL = "false" ]; then
+		RC=pass
+	fi
+ 
+    if [ $IP_set=dhcp ] && [ $AWS_VAL=true ]; then
+        RC=pass
+                echo "BootProto configuration has been detected as DHCP - *ensure that these are static IP's before proceeding!*"
+		else
+	RC=fail
+		echo "BootProto configuration could not be detected as DHCP or Static or None"
+        fi
+
+	processRC "[REQ 5.2]  Checking IP address is static or DHCP...\t\t"	
+
 }
+
 
 5-8-checkTime ()
 {
