@@ -29,6 +29,7 @@ Resources to supplement the existing Engineering Pre-Installation Check utility 
 #### Versions
 | Release   | Release Date      | Notes                                                           |
 |-----------|-------------------|-----------------------------------------------------------------|
+| 1.2		| 2020/12/03		| Corrections to firewalld services in kickstart, corrections to baseline config shared memory to pass precheck. |
 | 1.1		| 2020/08/12		| Updated supplemental_precheck linux for firewalld and other bugs |
 | 1.0		| 2020/07/02		| Clean-up of resources, script names, copy right statements. Corrected Author, Contributors & Maintainers to be consistent and compliant with license requirements. |
 
@@ -39,6 +40,7 @@ alternatives - is not provided.
 
 | Release   | Support Status     | Notes                           | Trellis Compatibility |
 |-----------|--------------------|---------------------------------|-----------------------|
+| 1.2 			| Supported          | Fixes for 5.1.2 release.              | 5.1.x, 5.0.x          |
 | 1.1 			| Supported          | Fixes for 5.1.1 release.              | 5.1.x, 5.0.x          |
 | 1.0 			| Supported          | Initial Release                 | 5.1.x, 5.0.x          |
 
