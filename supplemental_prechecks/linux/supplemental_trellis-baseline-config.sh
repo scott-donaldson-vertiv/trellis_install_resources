@@ -848,7 +848,7 @@ else
   echo "fs.file-max value is $FILE_MAX, which is less than the required value of $file_max for Trellis, fixing..."
   sed -i "s@^\(fs.file-max = \).*@\1$file_max@g" /etc/sysctl.conf
 fi
-kernel_shmall=2097152
+kernel_shmall=6291456
 KERNEL_SHMALL=`grep "kernel.shmall" /etc/sysctl.conf | awk '{ print $NF }'`
 if [ -z $KERNEL_SHMALL ]; then
   echo "kernel.shmall does not exist in /etc/sysctl.conf, adding..."
