@@ -466,10 +466,8 @@ print_data "*************************************************************"
 	  elif [ "$SYSCTRL_PARM" = "fs.file-max" ]; then
 		SYSCTRL_PARM_min=6815744
 	  elif [ "$SYSCTRL_PARM" = "kernel.shmall" ]; then
-	# Value changed to 5.1 value double the 2097152 to 4194304 (25.08.2020 - MZ)
 		SYSCTRL_PARM_min=4194304
 	  elif [ "$SYSCTRL_PARM" = "kernel.shmmax" ]; then
-	# (27 Sep 2018 - RayD) Changed value from 536870912 to 15461882265, taken from the 7.3 kickstart
 		  SYSCTRL_PARM_min=15461882265
 	  elif [ "$SYSCTRL_PARM" = "kernel.shmmni" ]; then
 		SYSCTRL_PARM_min=4096
