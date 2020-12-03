@@ -36,7 +36,7 @@
 #---------------------------------------------------------------------------------------------
 # Script Name: 		supplemental_trellis-checks.sh
 # Created: 			2013/05/01
-# Modified: 		2020/07/02
+# Modified: 		2020/12/03
 # Authors:			Scott Donaldson [NETPWR/AVOCENT/UK], Ray Daugherty [NETPWR/AVOCENT/US]
 #					Mark Zagorski [NETPWR/AVOCENT/UK] 
 # Contributors: 	Richard Golstein [NETPWR/AVOCENT/UK], Chris Bell [NETPWR/AVOCENT/US]
@@ -52,7 +52,7 @@
 #true=true
 #false=false
 
-SCRIPT_VERSION=5.0.1		# Bump this for each release
+SCRIPT_VERSION=5.0.2		# Bump this for each release
 TRELLIS_NEW_INSTALL=		# true if new install, false if upgrade
 BACK_OR_FRONT=				# "back" if back server, "front" if front server
 DEBUG_MODE=false

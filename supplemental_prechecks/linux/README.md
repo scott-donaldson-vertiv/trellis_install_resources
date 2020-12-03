@@ -7,6 +7,8 @@ This script provides additional pre-installation checks for Trellis™ Enterpris
 #### Versions
 | Release   | Release Date      | Notes             | Bugs Fixed    |
 |-----------|-------------------|-------------------|---------------|
+| 5.0.2		| 2020/12/03		| Corrections for shared memory. | |
+| 5.0.1		| 2020/08/26		| Corrections for shared memory and sysctl validations. | |
 | 2.0		| 2020/07/02		| Clean-up of resources, script names, copy right statements.<br>Corrected Author, Contributors & Maintainers to be consistent and compliant with license requirements.<br>Added additional documentation. | |
 | 3.3		  | 2018/?/?	  	| Enhancements for Trellis 5.x. | |
 | 3.2		  | ?							| Enhancements for upgrade detection. | ENTPL-7 Move Revision Notes Out of Script<br>ENTPL-6 Modifications to prompts to start matching Windows output. (Initial changes)<br>ENTPL-5 Base Log Output on Hostname & Run Time<br>ENTPL-4 Provide List of Packages to Installed<br>ENTPL-3 Support sudo entries placed in /etc/sudoers.d/trellis<br>ENTPL-2 Place report output in /u05 for easier access<br>ENTPL-1 Detect & permit execution with sudo |
@@ -43,6 +45,8 @@ alternatives - is not provided.
 
 | Release   | Support Status      | Notes             | Linux Compatibility    | Trellis Compatibility |
 |-----------|-------------------|-------------------|---------------|----------------------|
+| 5.0.2 			| Supported* | RHEL 7.x, CentOS 7.x | Windows Server 2012 R2, 2016 | 5.1.x, 5.0.x, 4.0.x* |
+| 5.0.1 			| Supported* | RHEL 7.x, CentOS 7.x | Windows Server 2012 R2, 2016 | 5.1.x, 5.0.x, 4.0.x* |
 | 5.0 			| Supported* | RHEL 6.x/7.x, CentOS 6.x/7.x | Windows Server 2012 R2 | 5.1.x, 5.0.x, 4.0.x* |
 | 3.3				| Deprecated | | RHEL 6.x | 4.0.x* |
 | 3.2				| Deprecated | | RHEL 6.x | 4.0.x* |
