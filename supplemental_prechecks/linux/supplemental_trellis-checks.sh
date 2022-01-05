@@ -2,7 +2,7 @@
 
 #---------------------------------------------------------------------------------------------
 #
-#      Copyright (c) 2013-2020, Avocent, Vertiv Infrastructure Ltd.
+#      Copyright (c) 2013-2021, Avocent, Vertiv Group Corp.
 #      All rights reserved.
 #
 #      Redistribution and use in source and binary forms, with or without
@@ -14,19 +14,19 @@
 #         documentation and/or other materials provided with the distribution.
 #      3. All advertising materials mentioning features or use of this software
 #         must display the following acknowledgement:
-#         This product includes software developed by Vertiv.
-#      4. Neither the name of the Vertiv nor the
+#         This product includes software developed by the Vertiv Group Corp.
+#      4. Neither the name of the Vertiv Group Corp. nor the
 #         names of its contributors may be used to endorse or promote products
 #         derived from this software without specific prior written permission.
 #
-#      THIS SOFTWARE IS PROVIDED BY VERTIV INFRASTRUCTURE LTD ''AS IS'' AND ANY
+#      THIS SOFTWARE IS PROVIDED BY VERTIV GROUP CORP. ''AS IS'' AND ANY
 #      EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 #      WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-#      DISCLAIMED. IN NO EVENT SHALL VERTIV INFRASTRUCTURE LTD BE LIABLE FOR ANY
+#      DISCLAIMED. IN NO EVENT SHALL VERTIV GROUP CORP. BE LIABLE FOR ANY
 #      DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 #      (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 #      LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-#      ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+#      ON ANY THEORY OF LIABILITY, WHOS_NIC_NAMEER IN CONTRACT, STRICT LIABILITY, OR TORT
 #      (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #      SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
@@ -35,15 +35,15 @@
 
 #---------------------------------------------------------------------------------------------
 # Script Name: 		supplemental_trellis-checks.sh
-# Created: 			2013/05/01
-# Modified: 		2020/12/03
-# Authors:			Scott Donaldson [NETPWR/AVOCENT/UK], Ray Daugherty [NETPWR/AVOCENT/US]
-#					Mark Zagorski [NETPWR/AVOCENT/UK] 
-# Contributors: 	Richard Golstein [NETPWR/AVOCENT/UK], Chris Bell [NETPWR/AVOCENT/US]
-# Maintainers: 		Ray Daugherty [NETPWR/AVOCENT/US], Scott Donaldson [NETPWR/AVOCENT/UK]
-# Company: 			Vertiv Infrastructure Ltd.
+# Created: 			2013-05-01
+# Modified: 		2022-01-05
+# Authors:			Scott Donaldson [VERTIV/AVOCENT/UK], Ray Daugherty [FRM. VERTIV/AVOCENT/CA]
+#					Mark Zagorski [VERTIV/AVOCENT/UK] 
+# Contributors: 	Richard Golstein [FRM. VERTIV/AVOCENT/UK], Chris Bell [VERTIV/AVOCENT/US]
+# Maintainers: 		Ray Daugherty [VERTIV/AVOCENT/US], Scott Donaldson [VERTIV/AVOCENT/UK]
+# Company: 			Vertiv Group Corp.
 # Group: 			Software Delivery, Services
-# Contact: 			global.services.delivery.development@vertivco.com
+# Contact: 			global.services.delivery.development@vertiv.com
 #---------------------------------------------------------------------------------------------
 
 #

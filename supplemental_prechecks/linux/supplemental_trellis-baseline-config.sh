@@ -2,7 +2,7 @@
 
 #---------------------------------------------------------------------------------------------
 #
-#      Copyright (c) 2013-2020, Avocent, Vertiv Infrastructure Ltd.
+#      Copyright (c) 2013-2022, Avocent, Vertiv Group Corp.
 #      All rights reserved.
 #
 #      Redistribution and use in source and binary forms, with or without
@@ -14,15 +14,15 @@
 #         documentation and/or other materials provided with the distribution.
 #      3. All advertising materials mentioning features or use of this software
 #         must display the following acknowledgement:
-#         This product includes software developed by the Emerson Electric Co.
-#      4. Neither the name of the Emerson Electric Co. nor the
+#         This product includes software developed by the Vertiv Group Corp.
+#      4. Neither the name of the Vertiv Group Corp. nor the
 #         names of its contributors may be used to endorse or promote products
 #         derived from this software without specific prior written permission.
 #
-#      THIS SOFTWARE IS PROVIDED BY VERTIV INFRASTRUCTURE LTD ''AS IS'' AND ANY
+#      THIS SOFTWARE IS PROVIDED BY VERTIV GROUP CORP. ''AS IS'' AND ANY
 #      EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 #      WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-#      DISCLAIMED. IN NO EVENT SHALL VERTIV INFRASTRUCTURE LTD BE LIABLE FOR ANY
+#      DISCLAIMED. IN NO EVENT SHALL VERTIV GROUP CORP. BE LIABLE FOR ANY
 #      DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 #      (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 #      LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -37,17 +37,17 @@
 # Script Name: 	supplemental_trellis_baseline-config.sh
 # Description: 	Reconfigures a RHEL/CentOS/OEL 6.x/7.x host for Trellis(tm) Enterprise 
 #              	installation.
-# Created: 		2013/05/01
-# Modified: 	2020/08/12
-# Authors: 		Michael Santangelo [FRM. NETPWR/AVOCENT/UK], Scott Donaldson [VERTIV/AVOCENT/UK]
-# Contributors:	Ray Daugherty [VERTIV/AVOCENT/UK], Mark Zagorski [VERTIV/AVOCENT/UK]
-# Maintainers:	Mark Zagorski [VERTIV/AVOCENT/UK], Scott Donaldson [NETPWR/AVOCENT/UK]
-# Company:		Vertiv Infrastructure Ltd.
+# Created: 		2013-05-01
+# Modified: 	2022-01-05
+# Authors: 		Michael Santangelo [FRM. VERTIV/AVOCENT/UK], Scott Donaldson [VERTIV/AVOCENT/UK]
+# Contributors:	Ray Daugherty [FRM. VERTIV/AVOCENT/CA], Mark Zagorski [VERTIV/AVOCENT/UK]
+# Maintainers:	Mark Zagorski [VERTIV/AVOCENT/UK], Scott Donaldson [VERTIV/AVOCENT/UK]
+# Company:		Vertiv Group Corp.
 # Group:		Software Delivery, Services
-# Contact:		global.services.delivery.development@vertivco.com
-# Company: 		Vertiv Infrastructure Ltd.
+# Contact:		global.services.delivery.development@vertiv.com
+# Company: 		Vertiv Group Corp.
 # Group:		Software Delovery, Services
-# Email:		global.services.delivery.development@vertivco.com
+# Email:		global.services.delivery.development@vertiv.com
 #---------------------------------------------------------------------------------------------
 
 
@@ -304,7 +304,7 @@ fi
 
 
 # TODO: Add dynamic loading for Trellis Release & Supported OS
-declare -a RELEASE_SUPPORTED=( "7.8" "7.7" "7.6" "7.5" "7.4" "7.3" "6.10" "6.9" "6.8" "6.7" )
+declare -a RELEASE_SUPPORTED=( "7.9" "7.8" "7.7" "7.6" "7.5" "7.4" "7.3" "6.10" "6.9" "6.8" "6.7" )
 declare -a RELEASE_DISTRO_SUPPORTED=( "CENTOS" "REDHAT" "ORACLE" )
 
 if [[ " ${RELEASE_DISTRO_SUPPORTED[@]} " =~ " ${RELEASE_DISTRO} " ]];  then
@@ -356,7 +356,7 @@ if [ $RELEASE_MAJOR = "6" ]; then
   OS_PACKAGES_REMOVE="aic94xxfirmware alsafirmware bind cronieanacron dovecot httpd ivtvfirmware iwl*firmware iwl1000firmware iwl100firmware iwl105firmware iwl2000firmware iwl3160firmware iwl3945firmware iwl3945firmware iwl5150firmware iwl6000firmware iwl6000g2afirmware iwl6050firmware iwl7260firmware netsnmpd rsh rshserver rshserver squid telnet telnetserver tftpserver vsftpd wpa_supplicant ypbind ypserv"
 elif [ $RELEASE_MAJOR = "7" ]; then
   IPTABLES_RESULT="iptables: Firewall is not running."
-  OS_PACKAGES_BASE="binutils cloog compat-db compat-db47 compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 coreutils cpp device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 lsof make mpfr mtools openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-x11-server-utilsvi  xorg-x11-utils"
+  OS_PACKAGES_BASE="binutils cloog compat-db compat-db47 compat-libcap1 compat-libstdc++-33 compat-libstdc++-33.i686 coreutils cpp device-mapper-multipath dos2unix elfutils-libelf elfutils-libelf-devel emacs fipscheck gcc gcc-c++ glibc glibc.i686 glibc-common glibc-devel glibc-devel.i686 hdparms initscripts kexec-tools ksh libXext libXi libXtst libaio libaio.i686 libaio-devel libaio-devel.i686 libgcc libgcc.i686 libsane-hpaio libstdc++ libstdc++.i686 libstdc++-devel libstdc++-devel.i686 lsof make mpfr mtools openmotif openssl openssl.i686 pax python-dmidecode redhat-lsb redhat-lsb-core.i686 screen sgpio sysstat unixODBC unixODBC-devel xinetd.x86_64 xorg-x11-server-utils vi  xorg-x11-utils"
   OS_PACKAGES_DEBUG="bpftool iptraf nmap pcp-pmda-bcc pcp-pmda-bonding pcp-pmda-trace strace tuned tuned-utils-systemtap"
   # Do not include dhcpd in removal it will be handled seperately.
   OS_PACKAGES_REMOVE="aic94xxfirmware alsafirmware bind cronieanacron dovecot httpd ivtvfirmware iwl*firmware iwl1000firmware iwl100firmware iwl105firmware iwl2000firmware iwl3160firmware iwl3945firmware iwl3945firmware iwl5150firmware iwl6000firmware iwl6000g2afirmware iwl6050firmware iwl7260firmware netsnmpd rsh rshserver rshserver squid telnet telnetserver tftpserver vsftpd wpa_supplicant ypbind ypserv"
